@@ -1,5 +1,5 @@
+import { LeadsList } from "@/components/LeadsList";
+
 export default function Home() {
-  return (
-    <>Home page</>
-  );
-}
+  return <LeadsList/>
+};
