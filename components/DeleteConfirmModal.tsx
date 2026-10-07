@@ -51,7 +51,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           <h3 className="text-base font-bold text-slate-900">Delete Lead?</h3>
           <p className="text-xs text-slate-500">
             Are you sure you want to delete{" "}
-            <span className="font-semibold text-slate-800">"{leadName}"</span>?
+            <span className="font-semibold text-slate-800">&quot;{leadName}&quot;</span>?
             This action cannot be undone.
           </p>
         </div>
