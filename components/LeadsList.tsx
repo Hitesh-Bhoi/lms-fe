@@ -1,8 +1,11 @@
 "use client";
+
 import { formatDate } from "@/common/helper";
 import { LeadsListType } from "@/common/types";
 import { getAllLeadsList } from "@/libs/apis";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Toast } from "../common/notification/Toast";
 import {
   UsersIcon,
@@ -16,9 +19,7 @@ import {
   EditIcon,
   TrashIcon,
 } from "../common/icon";
-import { LeadFormModal } from "./LeadFormModal";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
-import { LeadDetailModal } from "./LeadDetailModal";
 
 // leads status style tag by status
 const statusConfig: Record<
@@ -56,6 +57,8 @@ const statusConfig: Record<
 };
 
 export const LeadsList = () => {
+  const router = useRouter();
+
   // leads state for storing leads api data
   const [leadsList, setLeadsList] = useState<LeadsListType[]>([]);
   // loading state for displaying loading
@@ -63,16 +66,9 @@ export const LeadsList = () => {
   // search state for search functionality
   const [searchTerm, setSearchTerm] = useState<string>("");
 
-  // modals state for opening/closing modals
-  const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
-  const [editLeadTarget, setEditLeadTarget] = useState<LeadsListType | null>(
-    null,
-  );
+  // delete modal state
   const [deleteLeadTarget, setDeleteLeadTarget] =
     useState<LeadsListType | null>(null);
-  const [viewLeadTarget, setViewLeadTarget] = useState<LeadsListType | null>(
-    null,
-  );
 
   // toast state for displaying toast
   const [toast, setToast] = useState<{
@@ -82,7 +78,7 @@ export const LeadsList = () => {
 
   const showToast = (
     message: string,
-    type: "success" | "error" = "success",
+    type: "success" | "error" = "success"
   ) => {
     setToast({ message, type });
   };
@@ -102,6 +98,7 @@ export const LeadsList = () => {
     }
   };
 
+  // initial load
   useEffect(() => {
     fetchLeads();
   }, []);
@@ -154,7 +151,7 @@ export const LeadsList = () => {
               onClick={fetchLeads}
               disabled={loading}
               title="Refresh lead list"
-              className="inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-xs active:scale-95 disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer text-sm font-medium"
             >
               <RefreshIcon
                 className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
@@ -162,13 +159,13 @@ export const LeadsList = () => {
               <span>Refresh</span>
             </button>
             {/* add new lead btn */}
-            <button
-              onClick={() => setIsAddModalOpen(true)}
+            <Link
+              href="/leads/add"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium text-sm rounded-xl shadow-sm shadow-indigo-600/30 transition-all hover:shadow-indigo-600/40 active:scale-98"
             >
               <PlusIcon className="w-4 h-4" />
               <span>Add New Lead</span>
-            </button>
+            </Link>
           </div>
         </header>
 
@@ -188,7 +185,7 @@ export const LeadsList = () => {
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm("")}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 <CloseIcon className="w-4 h-4" />
               </button>
@@ -211,7 +208,7 @@ export const LeadsList = () => {
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm("")}
-                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium inline-flex items-center gap-1 hover:underline"
+                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium inline-flex items-center gap-1 hover:underline cursor-pointer"
               >
                 Clear search
               </button>
@@ -288,9 +285,12 @@ export const LeadsList = () => {
                         {/* lead name */}
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                            <Link
+                              href={`/leads/${lead._id}`}
+                              className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors hover:underline"
+                            >
                               {lead.name}
-                            </div>
+                            </Link>
                           </div>
                         </td>
 
@@ -347,29 +347,29 @@ export const LeadsList = () => {
                         {/* lead actions button */}
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <div className="inline-flex items-center gap-1.5">
-                            {/* view */}
-                            <button
-                              onClick={() => setViewLeadTarget(lead)}
+                            {/* view page link */}
+                            <Link
+                              href={`/leads/${lead._id}`}
                               title="View Lead Details"
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors inline-flex items-center justify-center"
                             >
                               <ViewIcon className="w-4 h-4" />
-                            </button>
+                            </Link>
 
-                            {/* edit */}
-                            <button
-                              onClick={() => setEditLeadTarget(lead)}
-                              title="Edit Lead"
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                            {/* edit page link */}
+                            <Link
+                              href={`/leads/${lead._id}/edit`}
+                              title="Edit Lead Details"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors inline-flex items-center justify-center"
                             >
                               <EditIcon className="w-4 h-4" />
-                            </button>
+                            </Link>
 
-                            {/* delete */}
+                            {/* delete modal trigger */}
                             <button
                               onClick={() => setDeleteLeadTarget(lead)}
                               title="Delete Lead"
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                             >
                               <TrashIcon className="w-4 h-4" />
                             </button>
@@ -396,14 +396,14 @@ export const LeadsList = () => {
                         {searchTerm ? (
                           <button
                             onClick={() => setSearchTerm("")}
-                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors cursor-pointer"
                           >
                             Reset search
                           </button>
                         ) : (
                           <button
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-xs"
+                            onClick={() => router.push("/leads/add")}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-xs cursor-pointer"
                           >
                             <PlusIcon className="w-3.5 h-3.5" />
                             <span>Create First Lead</span>
@@ -419,25 +419,7 @@ export const LeadsList = () => {
         </div>
       </div>
 
-      {/* add lead modal */}
-      <LeadFormModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSuccess={fetchLeads}
-        showToast={showToast}
-      />
-
-      {/* edit lead modal */}
-      <LeadFormModal
-        isOpen={!!editLeadTarget}
-        onClose={() => setEditLeadTarget(null)}
-        initialData={editLeadTarget}
-        isEdit
-        onSuccess={fetchLeads}
-        showToast={showToast}
-      />
-
-      {/* delete lead modal */}
+      {/* delete lead confirmation modal */}
       <DeleteConfirmModal
         isOpen={!!deleteLeadTarget}
         onClose={() => setDeleteLeadTarget(null)}
@@ -445,17 +427,6 @@ export const LeadsList = () => {
         leadName={deleteLeadTarget?.name || ""}
         onSuccess={fetchLeads}
         showToast={showToast}
-      />
-
-      {/* view lead modal */}
-      <LeadDetailModal
-        isOpen={!!viewLeadTarget}
-        onClose={() => setViewLeadTarget(null)}
-        lead={viewLeadTarget}
-        onEdit={(lead) => {
-          setViewLeadTarget(null);
-          setEditLeadTarget(lead);
-        }}
       />
     </div>
   );

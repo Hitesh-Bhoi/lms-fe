@@ -1,3 +1,5 @@
+export const emailRegx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export const formatDate = (date: string) => {
   if (!date) return '';
   return new Date(date).toLocaleString('en-US', {
