@@ -80,13 +80,14 @@ export const LeadForm: React.FC<LeadFormProps> = ({
       };
 
       if (isEdit && leadId) {
-        await updateLead(leadId, payload);
+        const res = await updateLead(leadId, payload);
+        showToast(res?.data?.message || "Lead updated successfully", TOAST_TYPE_ENUM.SUCCESS);
         setIsConfirmModalOpen(false);
-        router.push(`/leads/${leadId}`);
       } else {
-        await createLead(payload);
-        router.push("/");
+        const res = await createLead(payload);
+        showToast(res?.data?.message || "Lead updated successfully", TOAST_TYPE_ENUM.SUCCESS);
       }
+      setTimeout(()=>router.push(`/`), 1500);
     } catch (error: unknown) {
       console.error(`Failed to ${isEdit ? "update" : "create"} lead:`, error);
       let msg =
