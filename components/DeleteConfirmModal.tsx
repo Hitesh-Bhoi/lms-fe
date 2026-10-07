@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { deleteLead } from "@/libs/apis";
+import { deleteLead } from "@/libs/Apis";
 import { Modal } from "@/common/modal/Modal";
 import { SpinnerIcon, WarningIcon } from "@/common/icon";
 import { TOAST_TYPE_ENUM } from "@/common/enums";
@@ -12,7 +12,7 @@ interface DeleteConfirmModalProps {
   onSuccess: () => void;
   leadId: string;
   leadName: string;
-  showToast?: (message: string, type?: "success" | "error") => void;
+  showToast?: (message: string, type?: TOAST_TYPE_ENUM) => void;
 }
 
 export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
@@ -33,9 +33,8 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
       showToast?.(res?.data?.message || "Lead deleted successfully!", TOAST_TYPE_ENUM.SUCCESS);
       onSuccess();
       onClose();
-    } catch (error: any) {
-      console.error(error);
-      const msg = error.response?.data?.message || "Failed to delete lead.";
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error?.message : "Failed to delete lead.";
       showToast?.(msg, TOAST_TYPE_ENUM.ERROR);
     } finally {
       setSubmitting(false);

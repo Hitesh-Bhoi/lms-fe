@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getLeadById } from "@/libs/apis";
-import { LeadsListType } from "@/common/types";
+import { getLeadById } from "@/libs/Apis";
+import { LeadRecordType } from "@/common/types";
 import { LeadForm } from "@/components/LeadForm";
 import { ArrowLeftIcon, UsersIcon, RefreshIcon } from "@/common/icon";
 import { LEAD_MODE_TYPE_ENUM } from "@/common/enums";
@@ -18,7 +18,7 @@ export const ManageLead = ({ mode }: ManageLeadProps) => {
     const leadId = (params?.id as string) || "";
     const isAdd = mode === LEAD_MODE_TYPE_ENUM.ADD;
 
-    const [lead, setLead] = useState<LeadsListType | null>(null);
+    const [lead, setLead] = useState<LeadRecordType | null>(null);
     const [loading, setLoading] = useState<boolean>(!isAdd);
     const [error, setError] = useState<string | null>(null);
 

@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LeadsListType, LeadRecordPayload } from "@/common/types";
-import { createLead, updateLead } from "@/libs/apis";
+import { LeadRecordType } from "@/common/types";
+import { createLead, updateLead } from "@/libs/Apis";
 import { Toast } from "@/common/notification/Toast";
 import { EditConfirmModal } from "./EditConfirmModal";
 import {
@@ -16,7 +16,7 @@ import { LEAD_MODE_TYPE_ENUM, LEADS_STATUS_ENUM, TOAST_TYPE_ENUM } from "@/commo
 
 interface LeadFormProps {
   mode: LEAD_MODE_TYPE_ENUM;
-  initialData?: LeadsListType | null;
+  initialData?: LeadRecordType | null;
   leadId?: string;
 }
 
@@ -41,12 +41,12 @@ export const LeadForm: React.FC<LeadFormProps> = ({
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
-    type: TOAST_TYPE_ENUM.SUCCESS | TOAST_TYPE_ENUM.ERROR;
+    type: TOAST_TYPE_ENUM;
   } | null>(null);
 
   const showToast = (
     message: string,
-    type: TOAST_TYPE_ENUM.SUCCESS | TOAST_TYPE_ENUM.ERROR = TOAST_TYPE_ENUM.SUCCESS
+    type: TOAST_TYPE_ENUM = TOAST_TYPE_ENUM.SUCCESS
   ) => {
     setToast({ message, type });
   };
@@ -72,7 +72,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
   const handleSubmitApi = async () => {
     setSubmitting(true);
     try {
-      const payload: LeadRecordPayload = {
+      const payload: LeadRecordType = {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
@@ -85,9 +85,9 @@ export const LeadForm: React.FC<LeadFormProps> = ({
         setIsConfirmModalOpen(false);
       } else {
         const res = await createLead(payload);
-        showToast(res?.data?.message || "Lead updated successfully", TOAST_TYPE_ENUM.SUCCESS);
+        showToast(res?.data?.message || "Lead created successfully", TOAST_TYPE_ENUM.SUCCESS);
       }
-      setTimeout(()=>router.push(`/`), 1500);
+      setTimeout(() => router.push(`/`), 1500);
     } catch (error: unknown) {
       console.error(`Failed to ${isEdit ? "update" : "create"} lead:`, error);
       let msg =
@@ -162,10 +162,10 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                 }}
                 placeholder="e.g. John Doe"
                 className={`w-full px-4 py-2.5 text-sm rounded-xl transition-all ${isView
-                    ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
-                    : formErrors.name
-                      ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
-                      : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
+                  : formErrors.name
+                    ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
+                    : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   }`}
               />
               {formErrors.name && (
@@ -195,10 +195,10 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                   }}
                   placeholder="e.g. john@example.com"
                   className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl transition-all ${isView
-                      ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
-                      : formErrors.email
-                        ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
-                        : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
+                    : formErrors.email
+                      ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
+                      : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                     }`}
                 />
               </div>
@@ -229,10 +229,10 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                   }}
                   placeholder="e.g. +91 98765 43210"
                   className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl transition-all ${isView
-                      ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
-                      : formErrors.phone
-                        ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
-                        : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
+                    : formErrors.phone
+                      ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
+                      : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                     }`}
                 />
               </div>
@@ -255,14 +255,14 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                   setFormData({ ...formData, status: e.target.value })
                 }
                 className={`w-full px-4 py-2.5 text-sm rounded-xl transition-all ${isView
-                    ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
-                    : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800"
+                  ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
+                  : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800"
                   }`}
               >
-                <option value="new">New</option>
-                <option value="contacted">Contacted</option>
-                <option value="qualified">Qualified</option>
-                <option value="lost">Lost</option>
+                <option value={LEADS_STATUS_ENUM.NEW}>New</option>
+                <option value={LEADS_STATUS_ENUM.CONTACTED}>Contacted</option>
+                <option value={LEADS_STATUS_ENUM.QUALIFIED}>Qualified</option>
+                <option value={LEADS_STATUS_ENUM.LOST}>Lost</option>
               </select>
             </div>
           </div>

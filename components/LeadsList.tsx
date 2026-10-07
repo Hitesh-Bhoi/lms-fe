@@ -1,12 +1,13 @@
 "use client";
 
 import { formatDate } from "@/common/helper";
-import { LeadsListType } from "@/common/types";
-import { getAllLeadsList } from "@/libs/apis";
+import { LeadRecordType } from "@/common/types";
+import { getAllLeadsList } from "@/libs/Apis";
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Toast } from "../common/notification/Toast";
+import { LEADS_STATUS_ENUM, TOAST_TYPE_ENUM } from "@/common/enums";
 import {
   UsersIcon,
   RefreshIcon,
@@ -23,31 +24,31 @@ import { DeleteConfirmModal } from "./DeleteConfirmModal";
 
 // leads status style tag by status
 const statusConfig: Record<
-  string,
+  LEADS_STATUS_ENUM,
   { label: string; bg: string; text: string; border: string; dot: string }
 > = {
-  new: {
+  [LEADS_STATUS_ENUM.NEW]: {
     label: "New",
     bg: "bg-sky-50",
     text: "text-sky-700",
     border: "border-sky-200",
     dot: "bg-sky-500",
   },
-  contacted: {
+  [LEADS_STATUS_ENUM.CONTACTED]: {
     label: "Contacted",
     bg: "bg-amber-50",
     text: "text-amber-700",
     border: "border-amber-200",
     dot: "bg-amber-500",
   },
-  qualified: {
+  [LEADS_STATUS_ENUM.QUALIFIED]: {
     label: "Qualified",
     bg: "bg-emerald-50",
     text: "text-emerald-700",
     border: "border-emerald-200",
     dot: "bg-emerald-500",
   },
-  lost: {
+  [LEADS_STATUS_ENUM.LOST]: {
     label: "Lost",
     bg: "bg-rose-50",
     text: "text-rose-700",
@@ -60,7 +61,7 @@ export const LeadsList = () => {
   const router = useRouter();
 
   // leads state for storing leads api data
-  const [leadsList, setLeadsList] = useState<LeadsListType[]>([]);
+  const [leadsList, setLeadsList] = useState<LeadRecordType[]>([]);
   // loading state for displaying loading
   const [loading, setLoading] = useState<boolean>(true);
   // search state for search functionality
@@ -68,17 +69,17 @@ export const LeadsList = () => {
 
   // delete modal state
   const [deleteLeadTarget, setDeleteLeadTarget] =
-    useState<LeadsListType | null>(null);
+    useState<LeadRecordType | null>(null);
 
   // toast state for displaying toast
   const [toast, setToast] = useState<{
     message: string;
-    type: "success" | "error";
+    type: TOAST_TYPE_ENUM;
   } | null>(null);
 
   const showToast = (
     message: string,
-    type: "success" | "error" = "success"
+    type: TOAST_TYPE_ENUM = TOAST_TYPE_ENUM.SUCCESS
   ) => {
     setToast({ message, type });
   };
@@ -92,7 +93,7 @@ export const LeadsList = () => {
       setLeadsList(response.data?.data || []);
     } catch (error) {
       console.error("Failed to fetch leads:", error);
-      showToast("Failed to fetch leads from backend server", "error");
+      showToast("Failed to fetch leads from backend server", TOAST_TYPE_ENUM.ERROR);
     } finally {
       setLoading(false);
     }
@@ -273,9 +274,8 @@ export const LeadsList = () => {
                   ))
                 ) : filteredLeads.length > 0 ? (
                   filteredLeads.map((lead) => {
-                    const statusKey = lead.status?.toLowerCase() || "new";
-                    const statusStyle =
-                      statusConfig[statusKey] || statusConfig.new;
+                    const statusKey = (lead.status?.toLowerCase() as LEADS_STATUS_ENUM) || LEADS_STATUS_ENUM.NEW;
+                    const statusStyle = statusConfig[statusKey] || statusConfig[LEADS_STATUS_ENUM.NEW];
 
                     return (
                       <tr
@@ -353,7 +353,7 @@ export const LeadsList = () => {
                               title="View Lead Details"
                               className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors inline-flex items-center justify-center"
                             >
-                              <ViewIcon className="w-4 h-4" />
+                              <ViewIcon className="w-5 h-5" />
                             </Link>
 
                             {/* edit page link */}
@@ -362,7 +362,7 @@ export const LeadsList = () => {
                               title="Edit Lead Details"
                               className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors inline-flex items-center justify-center"
                             >
-                              <EditIcon className="w-4 h-4" />
+                              <EditIcon className="w-5 h-5" />
                             </Link>
 
                             {/* delete modal trigger */}
@@ -371,7 +371,7 @@ export const LeadsList = () => {
                               title="Delete Lead"
                               className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                             >
-                              <TrashIcon className="w-4 h-4" />
+                              <TrashIcon className="w-5 h-5" />
                             </button>
                           </div>
                         </td>

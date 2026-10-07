@@ -2,17 +2,18 @@
 
 import React, { useEffect } from "react";
 import { SuccessIcon, ErrorIcon, CloseIcon } from "../icon";
+import { TOAST_TYPE_ENUM } from "../enums";
 
 export interface ToastPropsType {
   message: string;
-  type?: "success" | "error";
+  type?: TOAST_TYPE_ENUM;
   onClose: () => void;
   duration?: number;
 }
 
 export const Toast: React.FC<ToastPropsType> = ({
   message,
-  type = "success",
+  type = TOAST_TYPE_ENUM.SUCCESS,
   onClose,
   duration = 3500,
 }) => {
@@ -29,7 +30,7 @@ export const Toast: React.FC<ToastPropsType> = ({
 
   return (
     <div className="fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium transition-all animate-bounce bg-white border-slate-200">
-      {type === "success" ? (
+      {type === TOAST_TYPE_ENUM.SUCCESS ? (
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
           <SuccessIcon className="w-4 h-4" />
         </span>
