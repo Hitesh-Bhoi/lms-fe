@@ -3,7 +3,7 @@
 import { formatDate } from "@/common/helper";
 import { LeadsListType } from "@/common/types";
 import { getAllLeadsList } from "@/libs/apis";
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Toast } from "../common/notification/Toast";
@@ -128,7 +128,7 @@ export const LeadsList = () => {
       )}
 
       {/* main container */}
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="space-y-6">
         {/* top header */}
         <header className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
@@ -381,7 +381,7 @@ export const LeadsList = () => {
                 ) : (
                   <tr>
                     <td colSpan={7} className="px-6 py-12 text-center">
-                      <div className="max-w-xs mx-auto space-y-3">
+                      <div className="max-w-xs space-y-3">
                         <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mx-auto">
                           <SearchIcon className="w-6 h-6" />
                         </div>

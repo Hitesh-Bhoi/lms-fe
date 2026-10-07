@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LeadsListType, LeadRecordPayload } from "@/common/types";
@@ -13,9 +12,10 @@ import {
   SpinnerIcon,
 } from "@/common/icon";
 import { emailRegx } from "@/common/helper";
+import { LEAD_MODE_TYPE_ENUM, LEADS_STATUS_ENUM, TOAST_TYPE_ENUM } from "@/common/enums";
 
 interface LeadFormProps {
-  mode: "view" | "edit" | "add";
+  mode: LEAD_MODE_TYPE_ENUM;
   initialData?: LeadsListType | null;
   leadId?: string;
 }
@@ -26,27 +26,27 @@ export const LeadForm: React.FC<LeadFormProps> = ({
   leadId,
 }) => {
   const router = useRouter();
-  const isView = mode === "view";
-  const isEdit = mode === "edit";
-  const isAdd = mode === "add";
+  const isView = mode === LEAD_MODE_TYPE_ENUM.VIEW;
+  const isEdit = mode === LEAD_MODE_TYPE_ENUM.EDIT;
+  const isAdd = mode === LEAD_MODE_TYPE_ENUM.ADD;
 
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     email: initialData?.email || "",
     phone: initialData?.phone || "",
-    status: initialData?.status || "new",
+    status: initialData?.status || LEADS_STATUS_ENUM.NEW,
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
-    type: "success" | "error";
+    type: TOAST_TYPE_ENUM.SUCCESS | TOAST_TYPE_ENUM.ERROR;
   } | null>(null);
 
   const showToast = (
     message: string,
-    type: "success" | "error" = "success"
+    type: TOAST_TYPE_ENUM.SUCCESS | TOAST_TYPE_ENUM.ERROR = TOAST_TYPE_ENUM.SUCCESS
   ) => {
     setToast({ message, type });
   };
@@ -68,52 +68,55 @@ export const LeadForm: React.FC<LeadFormProps> = ({
     return Object.keys(errors).length === 0;
   };
 
+  // unified api execution for both add and edit
+  const handleSubmitApi = async () => {
+    setSubmitting(true);
+    try {
+      const payload: LeadRecordPayload = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        status: formData.status,
+      };
+
+      if (isEdit && leadId) {
+        await updateLead(leadId, payload);
+        setIsConfirmModalOpen(false);
+        router.push(`/leads/${leadId}`);
+      } else {
+        await createLead(payload);
+        router.push("/");
+      }
+    } catch (error: unknown) {
+      console.error(`Failed to ${isEdit ? "update" : "create"} lead:`, error);
+      let msg =
+        error instanceof Error
+          ? error.message
+          : `Failed to ${isEdit ? "update" : "create"} lead.`;
+      if (typeof error === "object" && error !== null && "response" in error) {
+        const responseData = (error as { response?: { data?: { message?: string } } }).response?.data;
+        if (responseData?.message) msg = responseData.message;
+      }
+      setIsConfirmModalOpen(false);
+      showToast(msg, TOAST_TYPE_ENUM.ERROR);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // submit function
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     if (isView) return;
 
     if (!validate()) return;
 
     if (isEdit) {
-      // edit mode open confirmation modal first
+      // edit mode: open confirmation modal first
       setIsConfirmModalOpen(true);
     } else if (isAdd) {
-      // add mode direct save
-      setSubmitting(true);
-      try {
-        const payload: LeadRecordPayload = {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          status: formData.status,
-        };
-        await createLead(payload);
-        router.push("/");
-      } catch (error: unknown) {
-        console.error("Failed to create lead:", error);
-        let msg = error instanceof Error ? error.message : "Failed to create lead.";
-        showToast(msg, "error");
-        setSubmitting(false);
-      }
-    }
-  };
-
-  // Called from EditConfirmModal to execute update
-  const handleConfirmEdit = async () => {
-    if (!leadId) return;
-    setSubmitting(true);
-    try {
-      await updateLead(leadId, formData);
-      setIsConfirmModalOpen(false);
-      router.push(`/leads/${leadId}`);
-    } catch (error: unknown) {
-      console.error("Failed to update lead:", error);
-      let msg = error instanceof Error ? error.message : "Failed to update lead.";
-      setIsConfirmModalOpen(false);
-      showToast(msg, "error");
-    } finally {
-      setSubmitting(false);
+      // add mode: directly execute api call
+      handleSubmitApi();
     }
   };
 
@@ -132,7 +135,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
         <EditConfirmModal
           isOpen={isConfirmModalOpen}
           onClose={() => setIsConfirmModalOpen(false)}
-          onConfirm={handleConfirmEdit}
+          onConfirm={handleSubmitApi}
           leadName={formData.name || initialData?.name || "this lead"}
           submitting={submitting}
         />
@@ -157,13 +160,12 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                     setFormErrors({ ...formErrors, name: "" });
                 }}
                 placeholder="e.g. John Doe"
-                className={`w-full px-4 py-2.5 text-sm rounded-xl transition-all ${
-                  isView
+                className={`w-full px-4 py-2.5 text-sm rounded-xl transition-all ${isView
                     ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
                     : formErrors.name
-                    ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
-                    : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                }`}
+                      ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
+                      : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  }`}
               />
               {formErrors.name && (
                 <p className="text-xs text-rose-500 mt-1 font-medium">
@@ -191,13 +193,12 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                       setFormErrors({ ...formErrors, email: "" });
                   }}
                   placeholder="e.g. john@example.com"
-                  className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl transition-all ${
-                    isView
+                  className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl transition-all ${isView
                       ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
                       : formErrors.email
-                      ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
-                      : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                  }`}
+                        ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
+                        : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    }`}
                 />
               </div>
               {formErrors.email && (
@@ -226,13 +227,12 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                       setFormErrors({ ...formErrors, phone: "" });
                   }}
                   placeholder="e.g. +91 98765 43210"
-                  className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl transition-all ${
-                    isView
+                  className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl transition-all ${isView
                       ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
                       : formErrors.phone
-                      ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
-                      : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                  }`}
+                        ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
+                        : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    }`}
                 />
               </div>
               {formErrors.phone && (
@@ -253,11 +253,10 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                 onChange={(e) =>
                   setFormData({ ...formData, status: e.target.value })
                 }
-                className={`w-full px-4 py-2.5 text-sm rounded-xl transition-all ${
-                  isView
+                className={`w-full px-4 py-2.5 text-sm rounded-xl transition-all ${isView
                     ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
                     : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800"
-                }`}
+                  }`}
               >
                 <option value="new">New</option>
                 <option value="contacted">Contacted</option>
