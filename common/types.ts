@@ -6,4 +6,11 @@ export interface LeadsListType {
     status: string;
     created_at: string;
     updated_at: string;
-}
+};
+
+export type LeadRecordPayload = {
+    name: string;
+    email: string;
+    phone: string;
+    status?: string;
+};
