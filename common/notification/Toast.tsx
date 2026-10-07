@@ -39,7 +39,13 @@ export const Toast: React.FC<ToastPropsType> = ({
           <ErrorIcon className="w-4 h-4" />
         </span>
       )}
-      <span className="text-slate-800">{message}</span>
+      <span
+        role={type === TOAST_TYPE_ENUM.ERROR ? "alert" : "status"}
+        aria-live={type === TOAST_TYPE_ENUM.ERROR ? "assertive" : "polite"}
+        className="text-slate-800"
+      >
+        {message}
+      </span>
       <button
         onClick={onClose}
         className="text-slate-400 hover:text-slate-600 ml-2 p-0.5 rounded hover:bg-slate-100 transition-colors"

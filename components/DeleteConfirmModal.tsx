@@ -42,7 +42,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-sm">
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-sm" ariaLabel="Delete Lead?">
       <div className="p-6 space-y-4">
         <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
           <WarningIcon className="w-6 h-6" />

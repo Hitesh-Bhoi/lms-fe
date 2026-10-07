@@ -148,10 +148,11 @@ export const LeadForm: React.FC<LeadFormProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* full name */}
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <label htmlFor="lead-name" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
                 Full Name {!isView && <span className="text-rose-500">*</span>}
               </label>
               <input
+                id="lead-name"
                 type="text"
                 value={formData.name}
                 disabled={isView}
@@ -177,7 +178,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
 
             {/* email address */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <label htmlFor="lead-email" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
                 Email Address {!isView && <span className="text-rose-500">*</span>}
               </label>
               <div className="relative">
@@ -185,6 +186,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                   <MailIcon className="w-4 h-4" />
                 </div>
                 <input
+                  id="lead-email"
                   type="email"
                   value={formData.email}
                   disabled={isView}
@@ -211,7 +213,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
 
             {/* phone number */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <label htmlFor="lead-phone" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
                 Phone Number {!isView && <span className="text-rose-500">*</span>}
               </label>
               <div className="relative">
@@ -219,6 +221,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                   <PhoneIcon className="w-4 h-4" />
                 </div>
                 <input
+                  id="lead-phone"
                   type="tel"
                   value={formData.phone}
                   disabled={isView}
@@ -227,7 +230,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                     if (formErrors.phone)
                       setFormErrors({ ...formErrors, phone: "" });
                   }}
-                  placeholder="e.g. +91 98765 43210"
+                  placeholder="e.g. +91 xxxxxxxxxx"
                   className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl transition-all ${isView
                     ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
                     : formErrors.phone
@@ -245,10 +248,11 @@ export const LeadForm: React.FC<LeadFormProps> = ({
 
             {/* status */}
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <label htmlFor="lead-status" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
                 Status
               </label>
               <select
+                id="lead-status"
                 value={formData.status}
                 disabled={isView}
                 onChange={(e) =>
@@ -294,17 +298,17 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                   type="button"
                   onClick={() => router.push("/")}
                   disabled={submitting}
-                  className="px-5 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
+                  className="px-5 py-2.5 text-sm font-medium text-slate-600 text-slate-800 bg-slate-100 rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium text-sm rounded-xl shadow-sm shadow-indigo-600/30 transition-all hover:shadow-indigo-600/40 disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 bg-indigo-700 active:bg-indigo-800 text-white font-medium text-sm rounded-xl shadow-sm shadow-indigo-600/30 transition-all hover:shadow-indigo-600/40 disabled:opacity-50 cursor-pointer"
                 >
                   {submitting && <SpinnerIcon className="w-4 h-4" />}
-                  <span>{submitting ? "Saving..." : "Save Lead"}</span>
+                  <span>{submitting ? "Saving..." : "Save"}</span>
                 </button>
               </>
             )}

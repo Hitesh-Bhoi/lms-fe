@@ -101,7 +101,29 @@ export const LeadsList = () => {
 
   // initial load
   useEffect(() => {
-    fetchLeads();
+    let ignore = false;
+    const initFetch = async () => {
+      try {
+        const response = await getAllLeadsList();
+        if (!ignore) {
+          setLeadsList(response.data?.data || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch leads:", error);
+        if (!ignore) {
+          showToast("Failed to fetch leads from backend server", TOAST_TYPE_ENUM.ERROR);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initFetch();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   // filter leads by search term

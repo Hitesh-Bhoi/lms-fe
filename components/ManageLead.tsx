@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getLeadById } from "@/libs/Apis";
 import { LeadRecordType } from "@/common/types";
@@ -13,7 +13,6 @@ interface ManageLeadProps {
 }
 
 export const ManageLead = ({ mode }: ManageLeadProps) => {
-    const router = useRouter();
     const params = useParams();
     const leadId = (params?.id as string) || "";
     const isAdd = mode === LEAD_MODE_TYPE_ENUM.ADD;
@@ -72,15 +71,15 @@ export const ManageLead = ({ mode }: ManageLeadProps) => {
             <div className="max-w-3xl mx-auto space-y-6">
                 {/* back to home */}
                 <div className="flex items-center gap-4">
-                    <div
-                        onClick={() => router.push("/")}
+                    <Link
+                        href="/"
                         className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors cursor-pointer group"
                     >
                         <span className="p-1.5 rounded-lg bg-white border border-slate-200 group-hover:border-indigo-200 group-hover:bg-indigo-50 transition-colors">
                             <ArrowLeftIcon className="w-4 h-4" />
                         </span>
                         <span>Back to Home</span>
-                    </div>
+                    </Link>
                 </div>
 
                 {/* loading skeleton */}
