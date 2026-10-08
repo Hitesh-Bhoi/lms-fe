@@ -9,3 +9,12 @@ export interface LeadRecordType {
     created_at?: string;
     updated_at?: string;
 };
+
+export interface PaginationType {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+};

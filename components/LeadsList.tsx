@@ -1,6 +1,6 @@
 "use client";
 import { formatDate } from "@/common/helper";
-import { LeadRecordType } from "@/common/types";
+import { LeadRecordType, PaginationType } from "@/common/types";
 import { getAllLeadsList } from "@/libs/Apis";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -21,6 +21,7 @@ import {
 } from "../common/icon";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
 import { StatusDropdownFilter } from "../micro-components/StatusDropdownFilter";
+import { Pagination } from "../micro-components/Pagination";
 
 // filter state interface
 export interface LeadsFilterState {
@@ -69,9 +70,22 @@ const statusConfig: Record<
   },
 };
 
-// search and status filter
-const filterParams = (search: string, status: string) => {
-  const queryParams: { search?: string; status?: string } = {};
+// search and status filter with pagination support
+const filterParams = (
+  search: string,
+  status: string,
+  page: number = 1,
+  limit: number = 10,
+) => {
+  const queryParams: {
+    search?: string;
+    status?: string;
+    page: number;
+    limit: number;
+  } = {
+    page,
+    limit,
+  };
   if (search.trim()) {
     queryParams.search = search.trim();
   }
@@ -92,6 +106,16 @@ export const LeadsList = () => {
   const [filters, setFilters] = useState<LeadsFilterState>(defaultFilterState);
   // debounced search input to prevent excessive API requests
   const debouncedSearch = useDebounce<string>(filters.search, 800);
+  // pagination state
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [paginationInfo, setPaginationInfo] = useState<PaginationType>({
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
   // delete modal state
   const [deleteLeadTarget, setDeleteLeadTarget] =
     useState<LeadRecordType | null>(null);
@@ -110,25 +134,39 @@ export const LeadsList = () => {
   const hasActiveFilters = Boolean(filters.search.trim() || filters.status);
   // handle search change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCurrentPage(1);
     setFilters((prev) => ({ ...prev, search: e.target.value }));
   };
   // clear search filter
   const handleClearSearch = () => {
+    setCurrentPage(1);
     setFilters((prev) => ({ ...prev, search: "" }));
   };
   // handle status change
   const handleStatusChange = (status: string) => {
+    setCurrentPage(1);
     setFilters((prev) => ({ ...prev, status }));
   };
-  // API call to sync ui data on search or status filter changes
+  // handle page change
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= paginationInfo.totalPages && newPage !== currentPage) {
+      setLoading(true);
+      setCurrentPage(newPage);
+    }
+  };
+
+  // API call to sync ui data on search, status filter, or page changes
   useEffect(() => {
     let ignore = false;
     const fetchFilteredLeads = async () => {
       try {
-        const queryParams = filterParams(debouncedSearch, filters.status);
+        const queryParams = filterParams(debouncedSearch, filters.status, currentPage, 10);
         const response = await getAllLeadsList(queryParams);
         if (!ignore) {
           setLeadsList(response.data?.data || []);
+          if (response.data?.pagination) {
+            setPaginationInfo(response.data.pagination);
+          }
         }
       } catch (error: unknown) {
         if (axios.isCancel(error) || ignore) {
@@ -146,14 +184,17 @@ export const LeadsList = () => {
     return () => {
       ignore = true;
     };
-  }, [debouncedSearch, filters.status]);
+  }, [debouncedSearch, filters.status, currentPage]);
   // refresh handler
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      const queryParams = filterParams(debouncedSearch, filters.status);
+      const queryParams = filterParams(debouncedSearch, filters.status, currentPage, 10);
       const response = await getAllLeadsList(queryParams);
       setLeadsList(response.data?.data || []);
+      if (response.data?.pagination) {
+        setPaginationInfo(response.data.pagination);
+      }
     } catch (error) {
       console.error("Failed to refresh leads:", error);
       showToast(
@@ -161,10 +202,10 @@ export const LeadsList = () => {
         TOAST_TYPE_ENUM.ERROR,
       );
     } finally {
-      setTimeout(()=>{
+      setTimeout(() => {
         setIsRefreshing(false);
         setLoading(false);
-      },1000)
+      }, 1000);
     }
   };
   return (
@@ -325,7 +366,9 @@ export const LeadsList = () => {
                         className="hover:bg-slate-50/80 transition-colors group cursor-default"
                       >
                         {/* index number */}
-                        <td className="px-6 py-4 whitespace-nowrap">{i + 1}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {(paginationInfo.page - 1) * paginationInfo.limit + i + 1}
+                        </td>
                         {/* name */}
                         <td className="px-6 py-4 whitespace-nowrap">
                           {lead.name}
@@ -393,7 +436,7 @@ export const LeadsList = () => {
                 ) : (
                   /* no data UI */
                   <tr>
-                    <td colSpan={7} className="px-6 py-14 text-center">
+                    <td colSpan={8} className="px-6 py-14 text-center">
                       <div className="max-w-md mx-auto">
                         <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mx-auto">
                           {hasActiveFilters ? (
@@ -412,6 +455,17 @@ export const LeadsList = () => {
               </tbody>
             </table>
           </div>
+          {/* pagination bar */}
+          <Pagination
+            page={paginationInfo.page}
+            totalPages={paginationInfo.totalPages}
+            total={paginationInfo.total}
+            limit={paginationInfo.limit}
+            hasNextPage={paginationInfo.hasNextPage}
+            hasPrevPage={paginationInfo.hasPrevPage}
+            onPageChange={handlePageChange}
+            disabled={loading}
+          />
         </div>
       </div>
       {/* delete lead confirmation modal */}

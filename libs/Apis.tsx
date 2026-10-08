@@ -6,10 +6,13 @@ const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 export interface GetLeadsParams {
   search?: string;
   status?: string;
+  page?: number;
+  limit?: number;
 }
 
-export const getAllLeadsList = async (params: GetLeadsParams ) => {
-  return axios.get(`${baseUrl}/leads`, { params })};
+export const getAllLeadsList = async (params?: GetLeadsParams) => {
+  return axios.get(`${baseUrl}/leads`, { params });
+};
 
 export const getLeadById = async (id: string) => {
   return axios.get(`${baseUrl}/leads/${id}`);
