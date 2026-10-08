@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import { LeadRecordType, NoteRecordType } from "@/common/types";
 import { createLead, updateLead, createLeadNote, getLeadNotes } from "@/libs/Apis";
 import { Toast } from "@/common/notification/Toast";
@@ -181,7 +182,11 @@ export const LeadForm: React.FC<LeadFormProps> = ({
       }
       setTimeout(() => router.push(`/`), 1500);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : `Failed to ${isEdit ? "update" : "create"} lead.`;
+      const msg = axios.isAxiosError(error)
+        ? error.response?.data?.message || `Failed to ${isEdit ? "update" : "create"} lead.`
+        : error instanceof Error
+          ? error.message
+          : `Failed to ${isEdit ? "update" : "create"} lead.`;
       setIsConfirmModalOpen(false);
       showToast(msg, TOAST_TYPE_ENUM.ERROR);
     } finally {
