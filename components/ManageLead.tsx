@@ -127,7 +127,11 @@ export const ManageLead = ({ mode }: ManageLeadProps) => {
 
                 {/* form for add, view and edit */}
                 {(!loading && !error) && (
-                    <LeadForm mode={mode} initialData={lead} leadId={leadId} />
+                    <LeadForm
+                        mode={mode}
+                        initialData={lead}
+                        leadId={leadId}
+                    />
                 )}
             </div>
         </div>

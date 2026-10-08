@@ -1,8 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { LeadRecordType } from "@/common/types";
-import { createLead, updateLead } from "@/libs/Apis";
+import axios from "axios";
+import { LeadRecordType, NoteRecordType } from "@/common/types";
+import { createLead, updateLead, createLeadNote, getLeadNotes } from "@/libs/Apis";
 import { Toast } from "@/common/notification/Toast";
 import { EditConfirmModal } from "./EditConfirmModal";
 import {
@@ -10,8 +11,10 @@ import {
   PhoneIcon,
   EditIcon,
   SpinnerIcon,
+  PlusIcon,
+  CloseIcon,
 } from "@/common/icon";
-import { emailRegx } from "@/common/helper";
+import { emailRegx, formatDate } from "@/common/helper";
 import { LEAD_MODE_TYPE_ENUM, LEADS_STATUS_ENUM, TOAST_TYPE_ENUM } from "@/common/enums";
 
 interface LeadFormProps {
@@ -30,19 +33,70 @@ export const LeadForm: React.FC<LeadFormProps> = ({
   const isEdit = mode === LEAD_MODE_TYPE_ENUM.EDIT;
   const isAdd = mode === LEAD_MODE_TYPE_ENUM.ADD;
 
-  const [formData, setFormData] = useState({
+  // used to store form data
+  const [formData, setFormData] = useState<LeadRecordType>({
     name: initialData?.name || "",
     email: initialData?.email || "",
     phone: initialData?.phone || "",
     status: initialData?.status || LEADS_STATUS_ENUM.NEW,
   });
+  // used to store lead notes fetched by api
+  const [existingNotes, setExistingNotes] = useState<NoteRecordType[]>([]);
+  // used to store new notes added by user before submitting
+  const [currentNote, setCurrentNote] = useState<string>("");
+  // used to store notes that are staged for submission
+  const [stagedNotes, setStagedNotes] = useState<string[]>([]);
+  // used to store validation errors
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  // used to store loading state
   const [submitting, setSubmitting] = useState(false);
+  // used to store lead notes loading state
+  const [notesLoading, setNotesLoading] = useState<boolean>(!isAdd && Boolean(leadId));
+  // used to store confirmation modal state
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  // used to store toast state
   const [toast, setToast] = useState<{
     message: string;
     type: TOAST_TYPE_ENUM;
   } | null>(null);
+
+
+  // fetch notes data
+  useEffect(() => {
+    const getLeadNoteRecords = async () => {
+      if (isAdd || !leadId) return;
+      try {
+        const res = await getLeadNotes(leadId);
+        setExistingNotes(res.data?.data || []);
+      } catch {
+        setExistingNotes([]);
+      } finally {
+        setNotesLoading(false);
+      }
+    };
+
+    getLeadNoteRecords();
+  }, [isAdd, leadId]);
+  // sort notes
+  const sortedExistingNotes = useMemo(() => {
+    return [...existingNotes].sort((a, b) => {
+      if (!a.created_at || !b.created_at) return 0;
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    });
+  }, [existingNotes]);
+
+  // save notes into local state
+  const handleAddNote = () => {
+    const trimmed = currentNote.trim();
+    if (!trimmed) return;
+    setStagedNotes((prev) => [...prev, trimmed]);
+    setCurrentNote("");
+  };
+
+  // remove note from state before update
+  const handleRemoveNote = (index: number) => {
+    setStagedNotes((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const showToast = (
     message: string,
@@ -51,6 +105,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
     setToast({ message, type });
   };
 
+  // form validator
   const validate = () => {
     const errors: Record<string, string> = {};
     if (!formData.name.trim()) {
@@ -68,7 +123,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
     return Object.keys(errors).length === 0;
   };
 
-  // unified api execution for both add and edit
+  // api handle for both add and edit
   const handleSubmitApi = async () => {
     setSubmitting(true);
     try {
@@ -79,25 +134,59 @@ export const LeadForm: React.FC<LeadFormProps> = ({
         status: formData.status,
       };
 
+      let targetLeadId = leadId;
+      let leadActionMessage = "";
+
       if (isEdit && leadId) {
         const res = await updateLead(leadId, payload);
-        showToast(res?.data?.message || "Lead updated successfully", TOAST_TYPE_ENUM.SUCCESS);
+        leadActionMessage = res?.data?.message || "Lead updated successfully";
         setIsConfirmModalOpen(false);
       } else {
         const res = await createLead(payload);
-        showToast(res?.data?.message || "Lead created successfully", TOAST_TYPE_ENUM.SUCCESS);
+        const createdLead = res?.data?.data;
+        targetLeadId = createdLead?._id;
+        leadActionMessage = res?.data?.message || "Lead created successfully";
+      }
+
+      // save all notes staged notes + active text in textarea
+      const activeNote = currentNote.trim();
+      const notesToSave = [
+        ...stagedNotes,
+        ...(activeNote ? [activeNote] : []),
+      ];
+
+      if (targetLeadId && notesToSave.length > 0) {
+        try {
+          for (const noteContent of notesToSave) {
+            await createLeadNote(targetLeadId, { content: noteContent });
+          }
+          showToast(
+            isEdit
+              ? "Lead and new notes updated successfully"
+              : notesToSave.length > 1
+                ? "Lead and notes created successfully"
+                : "Lead and note created successfully",
+            TOAST_TYPE_ENUM.SUCCESS
+          );
+        } catch (noteError) {
+          console.error("Failed to save notes for lead:", noteError);
+          showToast(
+            isEdit
+              ? "Lead updated, but failed to save new notes"
+              : "Lead created, but failed to save notes",
+            TOAST_TYPE_ENUM.ERROR
+          );
+        }
+      } else {
+        showToast(leadActionMessage, TOAST_TYPE_ENUM.SUCCESS);
       }
       setTimeout(() => router.push(`/`), 1500);
     } catch (error: unknown) {
-      console.error(`Failed to ${isEdit ? "update" : "create"} lead:`, error);
-      let msg =
-        error instanceof Error
+      const msg = axios.isAxiosError(error)
+        ? error.response?.data?.message || `Failed to ${isEdit ? "update" : "create"} lead.`
+        : error instanceof Error
           ? error.message
           : `Failed to ${isEdit ? "update" : "create"} lead.`;
-      if (typeof error === "object" && error !== null && "response" in error) {
-        const responseData = (error as { response?: { data?: { message?: string } } }).response?.data;
-        if (responseData?.message) msg = responseData.message;
-      }
       setIsConfirmModalOpen(false);
       showToast(msg, TOAST_TYPE_ENUM.ERROR);
     } finally {
@@ -161,7 +250,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                   if (formErrors.name)
                     setFormErrors({ ...formErrors, name: "" });
                 }}
-                placeholder="e.g. John Doe"
+                placeholder="Enter your name"
                 className={`w-full px-4 py-2.5 text-sm rounded-xl transition-all ${isView
                   ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
                   : formErrors.name
@@ -195,7 +284,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                     if (formErrors.email)
                       setFormErrors({ ...formErrors, email: "" });
                   }}
-                  placeholder="e.g. john@example.com"
+                  placeholder="Enter your email"
                   className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl transition-all ${isView
                     ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
                     : formErrors.email
@@ -230,7 +319,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                     if (formErrors.phone)
                       setFormErrors({ ...formErrors, phone: "" });
                   }}
-                  placeholder="e.g. +91 xxxxxxxxxx"
+                  placeholder="Enter your phone"
                   className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl transition-all ${isView
                     ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
                     : formErrors.phone
@@ -269,6 +358,132 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                 <option value={LEADS_STATUS_ENUM.LOST}>Lost</option>
               </select>
             </div>
+
+            {/* notes section */}
+            <div className="sm:col-span-2 pt-1">
+              <div className="rounded-2xl border border-slate-200/90 bg-slate-50/50 p-4 ">
+                {/* note textarea input */}
+                <div className="space-y-2">
+                  {!isView && <div className="relative">
+                    <textarea
+                      id="lead-notes"
+                      rows={3}
+                      value={currentNote}
+                      disabled={isView || submitting}
+                      onChange={(e) => setCurrentNote(e.target.value)}
+                      placeholder="Write note here..."
+                      className={`w-full px-3.5 py-2.5 text-sm rounded-xl transition-all bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-slate-400 text-slate-800 resize-y min-h-20 `}
+                    />
+                  </div>}
+
+                  {!isView && (
+                    <div className="flex items-center justify-end pb-4">
+                      <button
+                        type="button"
+                        onClick={handleAddNote}
+                        disabled={!currentNote.trim() || submitting}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-2xs"
+                      >
+                        <PlusIcon className="w-4 h-4" />
+                        <span className="text-md">Add Note</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* notes loading skeleton */}
+                {notesLoading && (
+                  <div className={`${isView ? 'p-0' : 'pt-2 space-y-2.5 border-t border-slate-200/60'}`}>
+                    <div className="flex items-center justify-between">
+                      <div className="h-3.5 w-28 bg-slate-200 rounded animate-pulse"></div>
+                    </div>
+                    <div className="space-y-2">
+                      {Array.from({ length: 2 }).map((_, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-start gap-2.5 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs animate-pulse"
+                        >
+                          <div className="w-5 h-5 rounded-full bg-slate-200 shrink-0 mt-0.5"></div>
+                          <div className="flex-1 space-y-2">
+                            <div className="h-3 bg-slate-200 rounded w-3/4"></div>
+                            <div className="h-2.5 bg-slate-100 rounded w-1/2"></div>
+                            <div className="h-2 bg-slate-100 rounded w-20 mt-1"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* existing saved notes list (edit and view modes) */}
+                {!notesLoading && sortedExistingNotes.length > 0 && (
+                  <div className={`${isView ? 'p-0' : 'pt-2 space-y-2 border-t border-slate-200/60'}`}>
+                    <div className="flex items-center justify-between text-xs font-medium text-slate-600">
+                      <span className="font-semibold">LEAD NOTES</span>
+                    </div>
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                      {sortedExistingNotes.map((note, idx) => (
+                        <div
+                          key={note._id || idx}
+                          className="group flex items-start justify-between gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs text-xs text-slate-700 hover:border-slate-300 transition-all"
+                        >
+                          <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                            <span className="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-[10px] font-semibold">
+                              {idx + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="whitespace-pre-wrap wrap-break-words text-slate-800 leading-relaxed">
+                                {note.content}
+                              </p>
+                              {note.created_at && (
+                                <span className="inline-block mt-1 text-[10px] font-medium text-slate-400">
+                                  {formatDate(note.created_at)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* staged notes list (new notes to be saved) */}
+                {stagedNotes.length > 0 && (
+                  <div className="pt-2 border-t border-slate-200/60 space-y-2">
+                    <div className="flex items-center justify-between text-xs font-medium text-slate-600">
+                      <span>Notes to be saved ({stagedNotes.length})</span>
+                    </div>
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                      {stagedNotes.map((noteText, idx) => (
+                        <div
+                          key={idx}
+                          className="group flex items-start justify-between gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs text-xs text-slate-700 hover:border-slate-300 transition-all"
+                        >
+                          <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                            <span className="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-[10px] font-semibold">
+                              {sortedExistingNotes.length + idx + 1}
+                            </span>
+                            <p className="whitespace-pre-wrap wrap-break-words flex-1 text-slate-800 leading-relaxed">
+                              {noteText}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveNote(idx)}
+                            disabled={submitting}
+                            title="Remove note"
+                            className="text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
+                          >
+                            <CloseIcon className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* action buttons */}
@@ -278,7 +493,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                 <button
                   type="button"
                   onClick={() => router.push("/")}
-                  className="px-5 py-2.5 text-sm font-medium text-slate-600 text-slate-800 bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                  className="px-5 py-2.5 text-sm font-medium text-slate-800 bg-slate-100 rounded-xl transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -298,14 +513,14 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                   type="button"
                   onClick={() => router.push("/")}
                   disabled={submitting}
-                  className="px-5 py-2.5 text-sm font-medium text-slate-600 text-slate-800 bg-slate-100 rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
+                  className="px-5 py-2.5 text-sm font-medium text-slate-800 bg-slate-100 rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 bg-indigo-700 active:bg-indigo-800 text-white font-medium text-sm rounded-xl shadow-sm shadow-indigo-600/30 transition-all hover:shadow-indigo-600/40 disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-700 active:bg-indigo-800 text-white font-medium text-sm rounded-xl shadow-sm shadow-indigo-600/30 transition-all hover:shadow-indigo-600/40 disabled:opacity-50 cursor-pointer"
                 >
                   {submitting && <SpinnerIcon className="w-4 h-4" />}
                   <span>{submitting ? "Saving..." : "Save"}</span>
