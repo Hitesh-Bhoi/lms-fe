@@ -29,3 +29,11 @@ export const updateLead = async (id: string, data: Partial<LeadRecordType>) => {
 export const deleteLead = async (id: string) => {
   return axios.delete(`${baseUrl}/leads/${id}`);
 };
+
+export const createLeadNote = async (leadId: string, data: { content: string }) => {
+  return axios.post(`${baseUrl}/leads/${leadId}/notes`, data);
+};
+
+export const getLeadNotes = async (leadId: string) => {
+  return axios.get(`${baseUrl}/leads/${leadId}/notes`);
+};

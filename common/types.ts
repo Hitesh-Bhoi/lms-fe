@@ -1,5 +1,4 @@
 import { LEADS_STATUS_ENUM } from "./enums";
- 
 export interface LeadRecordType {
     _id?: string;
     name: string;
@@ -17,4 +16,12 @@ export interface PaginationType {
     totalPages: number;
     hasNextPage: boolean;
     hasPrevPage: boolean;
-};
+};
+
+export interface NoteRecordType {
+    _id?: string;
+    lead_id?: string | LeadRecordType;
+    content: string;
+    created_at?: string;
+    updated_at?: string;
+};
