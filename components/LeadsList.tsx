@@ -161,8 +161,10 @@ export const LeadsList = () => {
         TOAST_TYPE_ENUM.ERROR,
       );
     } finally {
-      setIsRefreshing(false);
-      setLoading(false);
+      setTimeout(()=>{
+        setIsRefreshing(false);
+        setLoading(false);
+      },1000)
     }
   };
   return (
@@ -177,7 +179,7 @@ export const LeadsList = () => {
       )}
       {/* main container */}
       <div className="space-y-6">
-        <header className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <header className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div className="flex items-center gap-3.5">
             <div className="h-11 w-11 rounded-xl bg-linear-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
               <UsersIcon className="w-6 h-6" />
@@ -188,33 +190,10 @@ export const LeadsList = () => {
               </h1>
             </div>
           </div>
-          <div className="flex items-center gap-2.5 w-full sm:w-auto">
-            {/* refresh btn */}
-            <button
-              type="button"
-              onClick={handleRefresh}
-              disabled={loading || isRefreshing}
-              title="Refresh lead list"
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer text-sm font-medium"
-            >
-              <RefreshIcon
-                className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
-              />
-              <span>Refresh</span>
-            </button>
-            {/* add new lead btn */}
-            <Link
-              href="/leads/add"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium text-sm rounded-xl shadow-sm shadow-indigo-600/30 transition-all hover:shadow-indigo-600/40 active:scale-98"
-            >
-              <PlusIcon className="w-4 h-4" />
-              <span>Add New Lead</span>
-            </Link>
-          </div>
         </header>
         {/* filter section*/}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-sm space-y-4">
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3.5">
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3.5">
             {/* search input */}
             <div className="relative flex-1 max-w-md">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -238,13 +217,35 @@ export const LeadsList = () => {
                 </button>
               )}
             </div>
-            {/* status filter */}
+            {/* right side: status filter, refresh, and add new lead button */}
             <div className="flex items-center gap-2.5 flex-wrap">
+              {/* refresh btn */}
+              <button
+                type="button"
+                onClick={handleRefresh}
+                disabled={loading || isRefreshing}
+                title="Refresh lead list"
+                className="inline-flex items-center justify-center gap-1.5 h-10 px-3.5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer text-sm font-medium"
+              >
+                <RefreshIcon
+                  className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+                />
+                <span>Refresh</span>
+              </button>
+              {/* status filter */}
               <StatusDropdownFilter
                 selectedStatus={filters.status}
                 onStatusChange={handleStatusChange}
                 disabled={loading}
               />
+              {/* add new lead btn */}
+              <Link
+                href="/leads/add"
+                className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium text-sm rounded-xl shadow-sm shadow-indigo-600/30 transition-all hover:shadow-indigo-600/40 active:scale-98"
+              >
+                <PlusIcon className="w-4 h-4" />
+                <span>Add New Lead</span>
+              </Link>
             </div>
           </div>
         </div>
