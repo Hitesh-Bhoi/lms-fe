@@ -1,30 +1,42 @@
 "use client";
-
 import { formatDate } from "@/common/helper";
 import { LeadRecordType } from "@/common/types";
 import { getAllLeadsList } from "@/libs/Apis";
-import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import axios from "axios";
 import { Toast } from "../common/notification/Toast";
 import { LEADS_STATUS_ENUM, TOAST_TYPE_ENUM } from "@/common/enums";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   UsersIcon,
   RefreshIcon,
   PlusIcon,
   SearchIcon,
   CloseIcon,
-  MailIcon,
-  PhoneIcon,
   ViewIcon,
   EditIcon,
   TrashIcon,
+  FilterIcon,
 } from "../common/icon";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
+import { StatusDropdownFilter } from "../micro-components/StatusDropdownFilter";
 
-// leads status style tag by status
+// filter state interface
+export interface LeadsFilterState {
+  search: string;
+  status: string;
+}
+
+// initial values of filter state
+const defaultFilterState: LeadsFilterState = {
+  search: "",
+  status: "",
+};
+
+// leads status badge styling by status
 const statusConfig: Record<
-  LEADS_STATUS_ENUM,
+  string,
   { label: string; bg: string; text: string; border: string; dot: string }
 > = {
   [LEADS_STATUS_ENUM.NEW]: {
@@ -57,91 +69,105 @@ const statusConfig: Record<
   },
 };
 
+// search and status filter
+const filterParams = (search: string, status: string) => {
+  const queryParams: { search?: string; status?: string } = {};
+  if (search.trim()) {
+    queryParams.search = search.trim();
+  }
+  if (status.trim()) {
+    queryParams.status = status.trim();
+  }
+  return queryParams;
+};
+
 export const LeadsList = () => {
-  const router = useRouter();
-
-  // leads state for storing leads api data
+  // leads list records from API
   const [leadsList, setLeadsList] = useState<LeadRecordType[]>([]);
-  // loading state for displaying loading
+  // loading state
   const [loading, setLoading] = useState<boolean>(true);
-  // search state for search functionality
-  const [searchTerm, setSearchTerm] = useState<string>("");
-
+  // refreshing state
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  // search and status filter state
+  const [filters, setFilters] = useState<LeadsFilterState>(defaultFilterState);
+  // debounced search input to prevent excessive API requests
+  const debouncedSearch = useDebounce<string>(filters.search, 800);
   // delete modal state
   const [deleteLeadTarget, setDeleteLeadTarget] =
     useState<LeadRecordType | null>(null);
-
-  // toast state for displaying toast
+  // toast notification state
   const [toast, setToast] = useState<{
     message: string;
     type: TOAST_TYPE_ENUM;
   } | null>(null);
-
   const showToast = (
     message: string,
-    type: TOAST_TYPE_ENUM = TOAST_TYPE_ENUM.SUCCESS
+    type: TOAST_TYPE_ENUM = TOAST_TYPE_ENUM.SUCCESS,
   ) => {
     setToast({ message, type });
   };
-
-
-  // get all lead records
-  const fetchLeads = async () => {
-    setLoading(true);
-    try {
-      const response = await getAllLeadsList();
-      setLeadsList(response.data?.data || []);
-    } catch (error) {
-      console.error("Failed to fetch leads:", error);
-      showToast("Failed to fetch leads from backend server", TOAST_TYPE_ENUM.ERROR);
-    } finally {
-      setLoading(false);
-    }
+  // check for applied filter
+  const hasActiveFilters = Boolean(filters.search.trim() || filters.status);
+  // handle search change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFilters((prev) => ({ ...prev, search: e.target.value }));
   };
-
-  // initial load
+  // clear search filter
+  const handleClearSearch = () => {
+    setFilters((prev) => ({ ...prev, search: "" }));
+  };
+  // handle status change
+  const handleStatusChange = (status: string) => {
+    setFilters((prev) => ({ ...prev, status }));
+  };
+  // API call to sync ui data on search or status filter changes
   useEffect(() => {
     let ignore = false;
-    const initFetch = async () => {
+    const fetchFilteredLeads = async () => {
       try {
-        const response = await getAllLeadsList();
+        const queryParams = filterParams(debouncedSearch, filters.status);
+        const response = await getAllLeadsList(queryParams);
         if (!ignore) {
           setLeadsList(response.data?.data || []);
         }
-      } catch (error) {
-        console.error("Failed to fetch leads:", error);
-        if (!ignore) {
-          showToast("Failed to fetch leads from backend server", TOAST_TYPE_ENUM.ERROR);
+      } catch (error: unknown) {
+        if (axios.isCancel(error) || ignore) {
+          return;
         }
+        console.error("Failed to fetch leads:", error);
+        showToast("Failed to fetch leads", TOAST_TYPE_ENUM.ERROR);
       } finally {
         if (!ignore) {
           setLoading(false);
         }
       }
     };
-
-    initFetch();
+    fetchFilteredLeads();
     return () => {
       ignore = true;
     };
-  }, []);
-
-  // filter leads by search term
-  const filteredLeads = useMemo(() => {
-    if (!searchTerm.trim()) return leadsList;
-    const term = searchTerm.toLowerCase();
-    return leadsList.filter((lead) => {
-      return (
-        lead.name?.toLowerCase().includes(term) ||
-        lead.email?.toLowerCase().includes(term) ||
-        (lead.phone && lead.phone.includes(term))
+  }, [debouncedSearch, filters.status]);
+  // refresh handler
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      const queryParams = filterParams(debouncedSearch, filters.status);
+      const response = await getAllLeadsList(queryParams);
+      setLeadsList(response.data?.data || []);
+    } catch (error) {
+      console.error("Failed to refresh leads:", error);
+      showToast(
+        "Failed to fetch leads from backend server",
+        TOAST_TYPE_ENUM.ERROR,
       );
-    });
-  }, [leadsList, searchTerm]);
-
+    } finally {
+      setIsRefreshing(false);
+      setLoading(false);
+    }
+  };
   return (
     <div className="min-h-screen bg-slate-50/70 p-4 sm:p-6 lg:p-8">
-      {/* toast notification component */}
+      {/* toast notification */}
       {toast && (
         <Toast
           message={toast.message}
@@ -149,10 +175,8 @@ export const LeadsList = () => {
           onClose={() => setToast(null)}
         />
       )}
-
       {/* main container */}
       <div className="space-y-6">
-        {/* top header */}
         <header className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className="h-11 w-11 rounded-xl bg-linear-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
@@ -160,24 +184,21 @@ export const LeadsList = () => {
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-                Leads Management
+                Leads Management Portal
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                Track, qualify, and organize prospective client leads
-              </p>
             </div>
           </div>
-
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
-            {/* refresh btn for table list */}
+            {/* refresh btn */}
             <button
-              onClick={fetchLeads}
-              disabled={loading}
+              type="button"
+              onClick={handleRefresh}
+              disabled={loading || isRefreshing}
               title="Refresh lead list"
-              className="inline-flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer text-sm font-medium"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer text-sm font-medium"
             >
               <RefreshIcon
-                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
               />
               <span>Refresh</span>
             </button>
@@ -191,57 +212,51 @@ export const LeadsList = () => {
             </Link>
           </div>
         </header>
-
-        {/* searchbar */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm flex items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-              <SearchIcon className="w-4 h-4" />
+        {/* filter section*/}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-sm space-y-4">
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3.5">
+            {/* search input */}
+            <div className="relative flex-1 max-w-md">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <SearchIcon className="w-4 h-4" />
+              </div>
+              <input
+                type="text"
+                value={filters.search}
+                onChange={handleSearchChange}
+                placeholder="Search leads by name or email..."
+                className="w-full pl-10 pr-9 py-2.5 text-sm bg-slate-50/80 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400 text-slate-800"
+              />
+              {filters.search && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  title="Clear search query"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                >
+                  <CloseIcon className="w-4 h-4" />
+                </button>
+              )}
             </div>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by name, email, or phone..."
-              className="w-full pl-10 pr-9 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors placeholder:text-slate-400 text-slate-800"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
-              >
-                <CloseIcon className="w-4 h-4" />
-              </button>
-            )}
+            {/* status filter */}
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <StatusDropdownFilter
+                selectedStatus={filters.status}
+                onStatusChange={handleStatusChange}
+                disabled={loading}
+              />
+            </div>
           </div>
         </div>
-
-        {/* leads table card */}
+        {/* leads list table */}
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h2 className="text-base font-semibold text-slate-900">
-                Leads List
-              </h2>
-              <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-xs font-medium">
-                {filteredLeads.length}{" "}
-                {filteredLeads.length === 1 ? "lead" : "leads"}
-              </span>
-            </div>
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium inline-flex items-center gap-1 hover:underline cursor-pointer"
-              >
-                Clear search
-              </button>
-            )}
-          </div>
-
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-50/75 border-b border-slate-200/80 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                 <tr>
+                  <th scope="col" className="px-6 py-3.5">
+                    Index
+                  </th>
                   <th scope="col" className="px-6 py-3.5">
                     Lead Name
                   </th>
@@ -270,9 +285,10 @@ export const LeadsList = () => {
                   Array.from({ length: 5 }).map((_, idx) => (
                     <tr key={idx} className="animate-pulse">
                       <td className="px-6 py-4">
-                        <div className="space-y-1.5">
-                          <div className="w-24 h-4 bg-slate-200 rounded"></div>
-                        </div>
+                        <div className="w-24 h-4 bg-slate-200 rounded"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="w-24 h-4 bg-slate-200 rounded"></div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="w-32 h-4 bg-slate-200 rounded"></div>
@@ -294,57 +310,34 @@ export const LeadsList = () => {
                       </td>
                     </tr>
                   ))
-                ) : filteredLeads.length > 0 ? (
-                  filteredLeads.map((lead) => {
-                    const statusKey = (lead.status?.toLowerCase() as LEADS_STATUS_ENUM) || LEADS_STATUS_ENUM.NEW;
-                    const statusStyle = statusConfig[statusKey] || statusConfig[LEADS_STATUS_ENUM.NEW];
-
+                ) : leadsList.length > 0 ? (
+                  leadsList.map((lead, i) => {
+                    const statusKey =
+                      (lead.status?.toLowerCase() as LEADS_STATUS_ENUM) ||
+                      LEADS_STATUS_ENUM.NEW;
+                    const statusStyle =
+                      statusConfig[statusKey] ||
+                      statusConfig[LEADS_STATUS_ENUM.NEW];
                     return (
                       <tr
                         key={lead._id}
                         className="hover:bg-slate-50/80 transition-colors group cursor-default"
                       >
-                        {/* lead name */}
+                        {/* index number */}
+                        <td className="px-6 py-4 whitespace-nowrap">{i + 1}</td>
+                        {/* name */}
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <Link
-                              href={`/leads/${lead._id}`}
-                              className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors hover:underline"
-                            >
-                              {lead.name}
-                            </Link>
-                          </div>
+                          {lead.name}
                         </td>
-
-                        {/* lead email */}
+                        {/* email */}
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <a
-                            href={`mailto:${lead.email}`}
-                            className="inline-flex items-center gap-1.5 text-slate-600 hover:text-indigo-600 transition-colors"
-                          >
-                            <MailIcon className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{lead.email}</span>
-                          </a>
+                          <span>{lead.email}</span>
                         </td>
-
-                        {/* lead phone */}
+                        {/* phone*/}
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {lead.phone ? (
-                            <a
-                              href={`tel:${lead.phone}`}
-                              className="inline-flex items-center gap-1.5 text-slate-600 hover:text-indigo-600 transition-colors"
-                            >
-                              <PhoneIcon className="w-3.5 h-3.5 text-slate-400" />
-                              <span>{lead.phone}</span>
-                            </a>
-                          ) : (
-                            <span className="text-slate-400 italic text-xs">
-                              Not specified
-                            </span>
-                          )}
+                          <span>{lead.phone}</span>
                         </td>
-
-                        {/* lead status */}
+                        {/* status */}
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}
@@ -355,21 +348,18 @@ export const LeadsList = () => {
                             {statusStyle.label}
                           </span>
                         </td>
-
-                        {/* lead created date */}
+                        {/* created date */}
                         <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500">
-                          {formatDate(lead.created_at || "")}
+                          {formatDate(lead.created_at || "N/A")}
                         </td>
-
-                        {/* lead updated date */}
+                        {/* updated date */}
                         <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500">
-                          {formatDate(lead.updated_at || "")}
+                          {formatDate(lead.updated_at || "N/A")}
                         </td>
-
-                        {/* lead actions button */}
+                        {/* actions buttons */}
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <div className="inline-flex items-center gap-1.5">
-                            {/* view page link */}
+                            {/* view lead */}
                             <Link
                               href={`/leads/${lead._id}`}
                               title="View Lead Details"
@@ -377,8 +367,7 @@ export const LeadsList = () => {
                             >
                               <ViewIcon className="w-5 h-5" />
                             </Link>
-
-                            {/* edit page link */}
+                            {/* edit lead */}
                             <Link
                               href={`/leads/${lead._id}/edit`}
                               title="Edit Lead Details"
@@ -386,9 +375,9 @@ export const LeadsList = () => {
                             >
                               <EditIcon className="w-5 h-5" />
                             </Link>
-
-                            {/* delete modal trigger */}
+                            {/* delete lead */}
                             <button
+                              type="button"
                               onClick={() => setDeleteLeadTarget(lead)}
                               title="Delete Lead"
                               className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
@@ -401,36 +390,20 @@ export const LeadsList = () => {
                     );
                   })
                 ) : (
+                  /* no data UI */
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center">
-                      <div className="max-w-xs space-y-3">
+                    <td colSpan={7} className="px-6 py-14 text-center">
+                      <div className="max-w-md mx-auto">
                         <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mx-auto">
-                          <SearchIcon className="w-6 h-6" />
+                          {hasActiveFilters ? (
+                            <FilterIcon className="w-6 h-6 text-indigo-500" />
+                          ) : (
+                            <SearchIcon className="w-6 h-6" />
+                          )}
                         </div>
-                        <h3 className="text-sm font-semibold text-slate-800">
-                          No matching leads found
+                        <h3 className="text-base font-semibold text-slate-800">
+                          No leads found matching your filters
                         </h3>
-                        <p className="text-xs text-slate-500">
-                          {searchTerm
-                            ? "Try adjusting your search query to locate records."
-                            : "No leads currently in your pipeline. Get started by adding a new lead."}
-                        </p>
-                        {searchTerm ? (
-                          <button
-                            onClick={() => setSearchTerm("")}
-                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors cursor-pointer"
-                          >
-                            Reset search
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => router.push("/leads/add")}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-xs cursor-pointer"
-                          >
-                            <PlusIcon className="w-3.5 h-3.5" />
-                            <span>Create First Lead</span>
-                          </button>
-                        )}
                       </div>
                     </td>
                   </tr>
@@ -440,14 +413,13 @@ export const LeadsList = () => {
           </div>
         </div>
       </div>
-
       {/* delete lead confirmation modal */}
       <DeleteConfirmModal
         isOpen={!!deleteLeadTarget}
         onClose={() => setDeleteLeadTarget(null)}
         leadId={deleteLeadTarget?._id || ""}
         leadName={deleteLeadTarget?.name || ""}
-        onSuccess={fetchLeads}
+        onSuccess={handleRefresh}
         showToast={showToast}
       />
     </div>

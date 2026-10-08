@@ -3,9 +3,13 @@ import { LeadRecordType } from "@/common/types";
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
-export const getAllLeadsList = async () => {
-  return axios.get(`${baseUrl}/leads`);
-};
+export interface GetLeadsParams {
+  search?: string;
+  status?: string;
+}
+
+export const getAllLeadsList = async (params: GetLeadsParams ) => {
+  return axios.get(`${baseUrl}/leads`, { params })};
 
 export const getLeadById = async (id: string) => {
   return axios.get(`${baseUrl}/leads/${id}`);
