@@ -9,7 +9,6 @@ import { Toast } from "../common/notification/Toast";
 import { LEADS_STATUS_ENUM, TOAST_TYPE_ENUM } from "@/common/enums";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
-  UsersIcon,
   RefreshIcon,
   PlusIcon,
   SearchIcon,
@@ -289,7 +288,7 @@ export const LeadsList = () => {
     }
   };
   return (
-    <div className="min-h-screen bg-slate-50/70 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-slate-50/70 p-4 sm:p-6 lg:p-4">
       {/* toast notification */}
       {toast && (
         <Toast
@@ -300,18 +299,6 @@ export const LeadsList = () => {
       )}
       {/* main container */}
       <div className="space-y-6">
-        <header className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-sm flex items-center justify-between">
-          <div className="flex items-center gap-3.5">
-            <div className="h-11 w-11 rounded-xl bg-linear-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-              <UsersIcon className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-                Leads Management Portal
-              </h1>
-            </div>
-          </div>
-        </header>
         {/* filter section*/}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-sm">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3.5">
