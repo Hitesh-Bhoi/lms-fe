@@ -96,55 +96,42 @@ export const StatusDropdownFilter: React.FC<StatusDropdownFilterProps> = ({
   };
   return (
     <div className="relative inline-block text-left" ref={dropdownRef}>
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setIsOpen((prev) => !prev)}
-        aria-haspopup="true"
-        aria-expanded={isOpen}
-        title={`Filter by status (currently: ${currentOption.label})`}
-        className={`group inline-flex items-center justify-between gap-3 h-10 px-3.5 rounded-xl border text-sm font-medium transition-all shadow-xs cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed ${
+      <div
+        className={`inline-flex items-center rounded-xl border text-sm font-medium transition-all shadow-xs ${
           isFiltered
             ? "border-indigo-200 bg-indigo-50/50 text-indigo-950 hover:bg-indigo-50/80 hover:border-indigo-300 ring-2 ring-indigo-500/10"
             : "border-slate-200 bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 hover:border-slate-300"
         } ${isOpen ? "ring-2 ring-indigo-500/20 border-indigo-500" : ""}`}
       >
-        <div className="flex items-center gap-2">
-          {isFiltered ? (
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => setIsOpen((prev) => !prev)}
+          aria-haspopup="true"
+          aria-expanded={isOpen}
+          title={`Filter by status (currently: ${currentOption.label})`}
+          className={`group inline-flex items-center gap-2.5 h-10 pl-3.5 ${
+            isFiltered ? "pr-1.5" : "pr-3.5"
+          } rounded-xl cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none`}
+        >
+          <div className="flex items-center gap-2">
+            {isFiltered ? (
+              <span
+                className={`w-2 h-2 rounded-full ${currentOption.dotColor} ring-2 ring-offset-1 ring-slate-100`}
+              />
+            ) : (
+              <FilterIcon className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+            )}
             <span
-              className={`w-2 h-2 rounded-full ${currentOption.dotColor} ring-2 ring-offset-1 ring-slate-100`}
-            />
-          ) : (
-            <FilterIcon className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
-          )}
-          <span
-            className={`text-sm ${
-              isFiltered
-                ? "font-semibold text-slate-900"
-                : "font-medium text-slate-700"
-            }`}
-          >
-            {currentOption.label}
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5 pl-1">
-          {isFiltered && (
-            <span
-              role="button"
-              tabIndex={0}
-              onClick={handleClear}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  handleClear();
-                }
-              }}
-              title="Reset status filter to All"
-              className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+              className={`text-sm ${
+                isFiltered
+                  ? "font-semibold text-slate-900"
+                  : "font-medium text-slate-700"
+              }`}
             >
-              <CloseIcon className="w-3.5 h-3.5" />
+              {currentOption.label}
             </span>
-          )}
+          </div>
           <ChevronDownIcon
             className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
               isOpen
@@ -152,8 +139,20 @@ export const StatusDropdownFilter: React.FC<StatusDropdownFilterProps> = ({
                 : "group-hover:text-slate-600"
             }`}
           />
-        </div>
-      </button>
+        </button>
+        {isFiltered && (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={handleClear}
+            title="Reset status filter to All"
+            aria-label="Reset status filter to All"
+            className="p-1 mr-2 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
+          >
+            <CloseIcon className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
       {/* dropdown menu */}
       {isOpen && (
         <div

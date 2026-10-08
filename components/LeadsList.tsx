@@ -2,7 +2,7 @@
 import { formatDate } from "@/common/helper";
 import { LeadRecordType, PaginationType } from "@/common/types";
 import { getAllLeadsList } from "@/libs/Apis";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import axios from "axios";
 import { Toast } from "../common/notification/Toast";
@@ -28,6 +28,16 @@ export interface LeadsFilterState {
   search: string;
   status: string;
 }
+
+// default pagination state
+const defaultPaginationInfo: PaginationType = {
+  total: 0,
+  page: 1,
+  limit: 10,
+  totalPages: 1,
+  hasNextPage: false,
+  hasPrevPage: false,
+};
 
 // initial values of filter state
 const defaultFilterState: LeadsFilterState = {
@@ -102,20 +112,45 @@ export const LeadsList = () => {
   const [loading, setLoading] = useState<boolean>(true);
   // refreshing state
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  // error state
+  const [error, setError] = useState<string | null>(null);
   // search and status filter state
   const [filters, setFilters] = useState<LeadsFilterState>(defaultFilterState);
   // debounced search input to prevent excessive API requests
   const debouncedSearch = useDebounce<string>(filters.search, 800);
   // pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [paginationInfo, setPaginationInfo] = useState<PaginationType>({
-    total: 0,
-    page: 1,
-    limit: 10,
-    totalPages: 1,
-    hasNextPage: false,
-    hasPrevPage: false,
+  const [paginationInfo, setPaginationInfo] =
+    useState<PaginationType>(defaultPaginationInfo);
+
+  // keep track of active request identity to discard stale responses
+  const latestRequestIdRef = useRef<number>(0);
+  const currentParamsRef = useRef({
+    search: debouncedSearch,
+    status: filters.status,
+    page: currentPage,
   });
+
+  useEffect(() => {
+    currentParamsRef.current = {
+      search: debouncedSearch,
+      status: filters.status,
+      page: currentPage,
+    };
+  }, [debouncedSearch, filters.status, currentPage]);
+
+  const isCurrentRequest = (
+    params: { search: string; status: string; page: number },
+    requestId: number,
+  ) => {
+    return (
+      requestId === latestRequestIdRef.current &&
+      params.search === currentParamsRef.current.search &&
+      params.status === currentParamsRef.current.status &&
+      params.page === currentParamsRef.current.page
+    );
+  };
+
   // delete modal state
   const [deleteLeadTarget, setDeleteLeadTarget] =
     useState<LeadRecordType | null>(null);
@@ -157,55 +192,100 @@ export const LeadsList = () => {
 
   // API call to sync ui data on search, status filter, or page changes
   useEffect(() => {
-    let ignore = false;
+    const requestParams = {
+      search: debouncedSearch,
+      status: filters.status,
+      page: currentPage,
+    };
+    const requestId = ++latestRequestIdRef.current;
+
     const fetchFilteredLeads = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const queryParams = filterParams(debouncedSearch, filters.status, currentPage, 10);
+        const queryParams = filterParams(
+          requestParams.search,
+          requestParams.status,
+          requestParams.page,
+          10,
+        );
         const response = await getAllLeadsList(queryParams);
-        if (!ignore) {
-          setLeadsList(response.data?.data || []);
-          if (response.data?.pagination) {
-            setPaginationInfo(response.data.pagination);
-          }
-        }
-      } catch (error: unknown) {
-        if (axios.isCancel(error) || ignore) {
+        if (!isCurrentRequest(requestParams, requestId)) {
           return;
         }
-        console.error("Failed to fetch leads:", error);
+        setLeadsList(response.data?.data || []);
+        if (response.data?.pagination) {
+          setPaginationInfo(response.data.pagination);
+        } else {
+          setPaginationInfo(defaultPaginationInfo);
+        }
+        setError(null);
+      } catch (err: unknown) {
+        if (axios.isCancel(err) || !isCurrentRequest(requestParams, requestId)) {
+          return;
+        }
+        console.error("Failed to fetch leads:", err);
+        setLeadsList([]);
+        setPaginationInfo(defaultPaginationInfo);
+        setError("Failed to fetch leads from backend server");
         showToast("Failed to fetch leads", TOAST_TYPE_ENUM.ERROR);
       } finally {
-        if (!ignore) {
+        if (isCurrentRequest(requestParams, requestId)) {
           setLoading(false);
         }
       }
     };
     fetchFilteredLeads();
-    return () => {
-      ignore = true;
-    };
   }, [debouncedSearch, filters.status, currentPage]);
+
   // refresh handler
   const handleRefresh = async () => {
+    const requestParams = {
+      search: debouncedSearch,
+      status: filters.status,
+      page: currentPage,
+    };
+    const requestId = ++latestRequestIdRef.current;
+
     setIsRefreshing(true);
+    setError(null);
     try {
-      const queryParams = filterParams(debouncedSearch, filters.status, currentPage, 10);
+      const queryParams = filterParams(
+        requestParams.search,
+        requestParams.status,
+        requestParams.page,
+        10,
+      );
       const response = await getAllLeadsList(queryParams);
+      if (!isCurrentRequest(requestParams, requestId)) {
+        return;
+      }
       setLeadsList(response.data?.data || []);
       if (response.data?.pagination) {
         setPaginationInfo(response.data.pagination);
+      } else {
+        setPaginationInfo(defaultPaginationInfo);
       }
-    } catch (error) {
-      console.error("Failed to refresh leads:", error);
+      setError(null);
+    } catch (err: unknown) {
+      if (axios.isCancel(err) || !isCurrentRequest(requestParams, requestId)) {
+        return;
+      }
+      console.error("Failed to refresh leads:", err);
+      setLeadsList([]);
+      setPaginationInfo(defaultPaginationInfo);
+      setError("Failed to fetch leads from backend server");
       showToast(
         "Failed to fetch leads from backend server",
         TOAST_TYPE_ENUM.ERROR,
       );
     } finally {
-      setTimeout(() => {
-        setIsRefreshing(false);
-        setLoading(false);
-      }, 1000);
+      if (isCurrentRequest(requestParams, requestId)) {
+        setTimeout(() => {
+          setIsRefreshing(false);
+          setLoading(false);
+        }, 1000);
+      }
     }
   };
   return (
@@ -394,11 +474,11 @@ export const LeadsList = () => {
                         </td>
                         {/* created date */}
                         <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500">
-                          {formatDate(lead.created_at || "N/A")}
+                          {lead.created_at ? formatDate(lead.created_at) : "N/A"}
                         </td>
                         {/* updated date */}
                         <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500">
-                          {formatDate(lead.updated_at || "N/A")}
+                          {lead.updated_at ? formatDate(lead.updated_at) : "N/A"}
                         </td>
                         {/* actions buttons */}
                         <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -433,6 +513,37 @@ export const LeadsList = () => {
                       </tr>
                     );
                   })
+                ) : error ? (
+                  /* error UI */
+                  <tr>
+                    <td colSpan={8} className="px-6 py-14 text-center">
+                      <div className="max-w-md mx-auto space-y-3">
+                        <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 mx-auto">
+                          <CloseIcon className="w-6 h-6" />
+                        </div>
+                        <h3 className="text-base font-semibold text-slate-800">
+                          Failed to load leads
+                        </h3>
+                        <p className="text-sm text-slate-500">
+                          {error}
+                        </p>
+                        <div className="pt-2">
+                          <button
+                            type="button"
+                            onClick={handleRefresh}
+                            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-50 text-sm font-medium transition-colors shadow-xs cursor-pointer"
+                          >
+                            <RefreshIcon
+                              className={`w-4 h-4 ${
+                                isRefreshing ? "animate-spin" : ""
+                              }`}
+                            />
+                            <span>Retry</span>
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
                 ) : (
                   /* no data UI */
                   <tr>
@@ -464,7 +575,7 @@ export const LeadsList = () => {
             hasNextPage={paginationInfo.hasNextPage}
             hasPrevPage={paginationInfo.hasPrevPage}
             onPageChange={handlePageChange}
-            disabled={loading}
+            disabled={loading || Boolean(error)}
           />
         </div>
       </div>
