@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import { ReactNode } from "react";
-import { BaseLayout } from "@/components/BaseLayout";
+import { AppLayoutWrapper } from "@/components/ClientLayoutWrapper";
+import "./globals.css";
 
 interface LayoutProps {
   children: ReactNode;
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <BaseLayout>{children}</BaseLayout>
+        <AppLayoutWrapper>{children}</AppLayoutWrapper>
       </body>
     </html>
   );
