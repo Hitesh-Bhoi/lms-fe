@@ -68,7 +68,7 @@ export const Login = () => {
           )}
           
           <div className="space-y-1.5">
-            <label htmlFor="email" className="text-sm font-medium text-slate-700 block">Email</label>
+            <label htmlFor="email" className="text-sm font-medium capitalize text-slate-700 block">Email</label>
             <input
               id="email"
               type="email"
@@ -81,7 +81,7 @@ export const Login = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="password" className="text-sm font-medium text-slate-700 block">Password</label>
+            <label htmlFor="password" className="text-sm font-medium capitalize text-slate-700 block">Password</label>
             <input
               id="password"
               type="password"

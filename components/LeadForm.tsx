@@ -431,7 +431,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                 {!notesLoading && sortedExistingNotes.length > 0 && (
                   <div className={`${isView ? 'p-0' : 'pt-2 space-y-2 border-t border-slate-200/60'}`}>
                     <div className="flex items-center justify-between text-xs font-medium text-slate-600">
-                      <span className="font-semibold">LEAD NOTES</span>
+                      <span className="font-semibold capitalize text-slate-700">Lead Notes</span>
                     </div>
                     <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                       {sortedExistingNotes.map((note, idx) => (
