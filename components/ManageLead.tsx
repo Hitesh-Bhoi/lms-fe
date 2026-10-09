@@ -8,19 +8,27 @@ import { LeadForm } from "@/components/LeadForm";
 import { ArrowLeftIcon, UsersIcon, RefreshIcon } from "@/common/icon";
 import { LEAD_MODE_TYPE_ENUM } from "@/common/enums";
 
+// manage lead wrapper props interface
 interface ManageLeadProps {
     mode: LEAD_MODE_TYPE_ENUM;
 }
 
+// manage lead page wrapper for add, edit, and view modes
 export const ManageLead = ({ mode }: ManageLeadProps) => {
+    // extract lead id from url route params
     const params = useParams();
     const leadId = (params?.id as string) || "";
+    // check if page is in add lead mode
     const isAdd = mode === LEAD_MODE_TYPE_ENUM.ADD;
 
+    // fetched lead record details
     const [lead, setLead] = useState<LeadRecordType | null>(null);
+    // loading state while fetching lead details
     const [loading, setLoading] = useState<boolean>(!isAdd);
+    // error message state if fetch fails
     const [error, setError] = useState<string | null>(null);
 
+    // manually re-fetch lead details from api
     const fetchLeadDetails = async () => {
         if (!leadId || isAdd) return;
         setLoading(true);
@@ -41,9 +49,11 @@ export const ManageLead = ({ mode }: ManageLeadProps) => {
         }
     };
 
+    // automatically fetch lead data when viewing or editing an existing lead
     useEffect(() => {
         if (isAdd || !leadId) return;
 
+        // ignore flag to prevent stale state updates after unmount
         let ignore = false;
         const loadData = async () => {
             try {

@@ -17,18 +17,22 @@ import {
 import { emailRegx, formatDate } from "@/common/helper";
 import { LEAD_MODE_TYPE_ENUM, LEADS_STATUS_ENUM, TOAST_TYPE_ENUM } from "@/common/enums";
 
+// lead form props interface
 interface LeadFormProps {
   mode: LEAD_MODE_TYPE_ENUM;
   initialData?: LeadRecordType | null;
   leadId?: string;
 }
 
+// reusable lead form component for create, edit, and view modes
 export const LeadForm: React.FC<LeadFormProps> = ({
   mode,
   initialData,
   leadId,
 }) => {
+  // router instance for navigation
   const router = useRouter();
+  // check current mode of the form
   const isView = mode === LEAD_MODE_TYPE_ENUM.VIEW;
   const isEdit = mode === LEAD_MODE_TYPE_ENUM.EDIT;
   const isAdd = mode === LEAD_MODE_TYPE_ENUM.ADD;

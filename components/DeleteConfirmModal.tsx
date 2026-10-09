@@ -6,6 +6,7 @@ import { Modal } from "@/common/modal/Modal";
 import { SpinnerIcon, WarningIcon } from "@/common/icon";
 import { TOAST_TYPE_ENUM } from "@/common/enums";
 
+// delete confirmation modal props interface
 interface DeleteConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -15,6 +16,7 @@ interface DeleteConfirmModalProps {
   showToast?: (message: string, type?: TOAST_TYPE_ENUM) => void;
 }
 
+// modal dialog to confirm lead deletion
 export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   isOpen,
   onClose,
@@ -23,8 +25,10 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   leadName,
   showToast,
 }) => {
+  // submitting state during deletion api call
   const [submitting, setSubmitting] = useState(false);
 
+  // handle lead deletion api submission
   const handleConfirm = async () => {
     if (submitting || !leadId) return;
     setSubmitting(true);

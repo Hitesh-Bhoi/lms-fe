@@ -7,10 +7,13 @@ import { logoutAdmin } from "@/libs/Apis";
 import { Toast } from "@/common/notification/Toast";
 import { TOAST_TYPE_ENUM } from "@/common/enums";
 
+// topbar component props interface
 interface TopbarProps {
   isOpen: boolean;
   onToggle: () => void;
 }
+
+// determine header page title based on current pathname
 const getPageTitle = (pathname: string): string => {
   if (pathname === "/" || pathname === "/leads") return "Leads";
   if (pathname === "/leads/add") return "Add Lead";
@@ -22,16 +25,24 @@ const getPageTitle = (pathname: string): string => {
   return "Leads";
 };
 
+// main topbar navigation header component
 export const Topbar: React.FC<TopbarProps> = ({ isOpen, onToggle }) => {
+  // get current route pathname
   const pathname = usePathname();
+  // router instance for navigation
   const router = useRouter();
+  // header title resolved from pathname
   const pageTitle = getPageTitle(pathname);
+  // profile dropdown menu open state
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState<boolean>(false);
+  // logout request in-flight loading state
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
+  // toast notification state
   const [toast, setToast] = useState<{
     message: string;
     type: TOAST_TYPE_ENUM;
   } | null>(null);
+  // ref to profile menu container for outside click detection
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   // close the profile menu on outside click

@@ -5,19 +5,26 @@ import { UsersIcon } from "@/common/icon";
 import { loginAdmin } from "@/libs/Apis";
 import { emailRegx } from "@/common/helper";
 
+// administrator login page component
 export const Login = () => {
+  // router instance for navigation
   const router = useRouter();
+  // administrator email address input
   const [email, setEmail] = useState<string>("");
+  // administrator password input
   const [password, setPassword] = useState<string>("");
+  // form error alert message
   const [error, setError] = useState<string>("");
+  // login submission loading state
   const [loading, setLoading] = useState<boolean>(false);
 
+  // handle login form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
     setError("");
 
-    // basic validation
+    // validate required credentials and email format
     if (!email || !password) {
       setError("Please enter both email and password.");
       return;

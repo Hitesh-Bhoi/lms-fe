@@ -104,6 +104,7 @@ const filterParams = (
   return queryParams;
 };
 
+// leads dashboard listing component with search, filtering, and pagination
 export const LeadsList = () => {
   // leads list records from API
   const [leadsList, setLeadsList] = useState<LeadRecordType[]>([]);
@@ -138,6 +139,7 @@ export const LeadsList = () => {
     };
   }, [debouncedSearch, filters.status, currentPage]);
 
+  // verify if incoming api response corresponds to the most recent query parameters
   const isCurrentRequest = (
     params: { search: string; status: string; page: number },
     requestId: number,

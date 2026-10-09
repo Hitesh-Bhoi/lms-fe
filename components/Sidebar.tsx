@@ -10,26 +10,34 @@ import {
   ChevronDownIcon,
 } from "@/common/icon";
 
+// sidebar component props interface
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
 }
 
+// main sidebar navigation component
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
+  // get current active route pathname
   const pathname = usePathname();
+  // track previous pathname to sync dropdown state on navigation
   const [prevPathname, setPrevPathname] = useState(pathname);
+  // manual toggle state for settings menu (null derives state from active path)
   const [isSettingsOpenManual, setIsSettingsOpenManual] = useState<boolean | null>(null);
 
+  // reset manual menu toggle when user navigates to a new route
   if (prevPathname !== pathname) {
     setPrevPathname(pathname);
     setIsSettingsOpenManual(null);
   }
 
+  // determine whether settings dropdown should be open based on manual toggle or active page
   const isSettingsOpen =
     isSettingsOpenManual !== null
       ? isSettingsOpenManual
       : pathname === "/profile";
 
+  // navigation menu items configuration with route and active state
   const navItems = [
     {
       label: "Leads",
@@ -47,7 +55,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
 
   return (
     <>
-      {/* Mobile backdrop */}
+      {/* mobile backdrop overlay for small screens */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-slate-900/40 z-30 lg:hidden"
@@ -56,7 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         />
       )}
 
-      {/* Sidebar container */}
+      {/* sidebar navigation panel container */}
       <aside
         className={`fixed inset-y-0 left-0 z-40 bg-white flex flex-col transition-all duration-300 ease-in-out overflow-hidden lg:h-screen lg:sticky lg:top-0 ${
           isOpen
@@ -65,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         }`}
       >
         <div className="w-64 shrink-0 flex flex-col h-full">
-          {/* Sidebar Header */}
+          {/* sidebar header with brand logo and portal title */}
           <div className="h-16 px-4 flex items-center border-b border-slate-200/80 shrink-0">
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-xl bg-linear-to-tr from-blue-600 to-blue-400 flex items-center justify-center text-white shadow-xs shrink-0">
@@ -77,7 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
             </div>
           </div>
 
-          {/* Navigation Items */}
+          {/* navigation items list */}
           <nav className="p-3 space-y-1.5 flex-1 overflow-y-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -86,6 +94,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                   key={item.href}
                   href={item.href}
                   onClick={() => {
+                    // auto close sidebar on mobile when navigating
                     if (typeof window !== "undefined" && window.innerWidth < 1024) {
                       onToggle();
                     }
@@ -103,7 +112,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
             })}
           </nav>
 
-          {/* Settings Dropdown at Bottom */}
+          {/* settings dropdown at the bottom */}
           <div className="p-3 border-t border-slate-200/80 shrink-0">
             <button
               type="button"
@@ -121,11 +130,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               />
             </button>
 
+            {/* settings sub-menu links */}
             {isSettingsOpen && (
               <div className="mt-1 space-y-1 pl-2">
                 <Link
                   href="/profile"
                   onClick={() => {
+                    // auto close sidebar on mobile when navigating
                     if (typeof window !== "undefined" && window.innerWidth < 1024) {
                       onToggle();
                     }

@@ -3,15 +3,20 @@ import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
+// axios interceptor provider props interface
 interface AxiosInterceptorProps {
   children: React.ReactNode;
 }
 
+// component that sets up global axios request and response interceptors
 export const AxiosInterceptor: React.FC<AxiosInterceptorProps> = ({
   children,
 }) => {
+  // router instance for redirecting unauthenticated users
   const router = useRouter();
+  // state indicating whether interceptors have been registered
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  // ref to track pending redirect timeout for 401 response
   const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
