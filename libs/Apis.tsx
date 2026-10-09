@@ -2,6 +2,7 @@ import axios from "axios";
 import { LeadRecordType } from "@/common/types";
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+axios.defaults.withCredentials = true;
 
 export interface GetLeadsParams {
   search?: string;
@@ -36,4 +37,16 @@ export const createLeadNote = async (leadId: string, data: { content: string }) 
 
 export const getLeadNotes = async (leadId: string) => {
   return axios.get(`${baseUrl}/leads/${leadId}/notes`);
+};
+
+export const loginAdmin = async (data: { email: string; password: string }) => {
+  return axios.post(`${baseUrl}/auth/login`, data);
+};
+
+export const logoutAdmin = async () => {
+  return axios.post(`${baseUrl}/auth/logout`);
+};
+
+export const getAdminProfile = async () => {
+  return axios.get(`${baseUrl}/auth/me`);
 };

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -17,13 +17,18 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const pathname = usePathname();
-  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  const [isSettingsOpenManual, setIsSettingsOpenManual] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    if (pathname === "/profile") {
-      setIsSettingsOpen(true);
-    }
-  }, [pathname]);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    setIsSettingsOpenManual(null);
+  }
+
+  const isSettingsOpen =
+    isSettingsOpenManual !== null
+      ? isSettingsOpenManual
+      : pathname === "/profile";
 
   const navItems = [
     {
@@ -102,7 +107,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           <div className="p-3 border-t border-slate-200/80 shrink-0">
             <button
               type="button"
-              onClick={() => setIsSettingsOpen((prev) => !prev)}
+              onClick={() => setIsSettingsOpenManual(!isSettingsOpen)}
               className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-3">

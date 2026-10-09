@@ -223,6 +223,15 @@ export const LeadsList = () => {
         if (axios.isCancel(err) || !isCurrentRequest(requestParams, requestId)) {
           return;
         }
+        
+        if (axios.isAxiosError(err) && err.response?.status === 401) {
+          setLeadsList([]);
+          setPaginationInfo(defaultPaginationInfo);
+          setError(err.response.data?.message || "401 Unauthenticated");
+          showToast(err.response.data?.message || "401 Unauthenticated", TOAST_TYPE_ENUM.ERROR);
+          return;
+        }
+        
         console.error("Failed to fetch leads:", err);
         setLeadsList([]);
         setPaginationInfo(defaultPaginationInfo);
@@ -270,6 +279,15 @@ export const LeadsList = () => {
       if (axios.isCancel(err) || !isCurrentRequest(requestParams, requestId)) {
         return;
       }
+
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        setLeadsList([]);
+        setPaginationInfo(defaultPaginationInfo);
+        setError(err.response.data?.message || "401 Unauthenticated");
+        showToast(err.response.data?.message || "401 Unauthenticated", TOAST_TYPE_ENUM.ERROR);
+        return;
+      }
+
       console.error("Failed to refresh leads:", err);
       setLeadsList([]);
       setPaginationInfo(defaultPaginationInfo);
