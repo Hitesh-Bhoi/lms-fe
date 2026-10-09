@@ -7,6 +7,7 @@ import { logoutAdmin } from "@/libs/Apis";
 import { Toast } from "@/common/notification/Toast";
 import { TOAST_TYPE_ENUM } from "@/common/enums";
 import { ToastInfoType } from "@/common/types";
+import { getApiErrorMessage } from "@/common/helper";
 
 // topbar component props interface
 interface TopbarProps {
@@ -71,8 +72,12 @@ export const Topbar: React.FC<TopbarProps> = ({ isOpen, onToggle }) => {
     } catch (error) {
       console.error("Logout error:", error);
       setIsProfileMenuOpen(true);
+      const msg = getApiErrorMessage(
+        error,
+        "Logout failed. Your session remains active, please try again."
+      );
       setToast({
-        message: "Logout failed. Your session remains active, please try again.",
+        message: msg,
         type: TOAST_TYPE_ENUM.ERROR,
       });
     } finally {

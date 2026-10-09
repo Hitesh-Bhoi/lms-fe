@@ -7,6 +7,7 @@ import { LeadRecordType } from "@/common/types";
 import { LeadForm } from "@/components/LeadForm";
 import { ArrowLeftIcon, UsersIcon, RefreshIcon } from "@/common/icon";
 import { LEAD_MODE_TYPE_ENUM } from "@/common/enums";
+import { getApiErrorMessage } from "@/common/helper";
 
 // manage lead wrapper props interface
 interface ManageLeadProps {
@@ -41,9 +42,9 @@ export const ManageLead = ({ mode }: ManageLeadProps) => {
             } else {
                 setError("Lead not found");
             }
-        } catch {
-            console.error("Failed to load lead");
-            setError("Failed to load lead details.");
+        } catch (err: unknown) {
+            console.error("Failed to load lead", err);
+            setError(getApiErrorMessage(err, "Failed to load lead details."));
         } finally {
             setLoading(false);
         }
@@ -63,8 +64,8 @@ export const ManageLead = ({ mode }: ManageLeadProps) => {
                     if (leadData) setLead(leadData);
                     else setError("Lead not found");
                 }
-            } catch {
-                if (!ignore) setError("Failed to load lead details.");
+            } catch (err: unknown) {
+                if (!ignore) setError(getApiErrorMessage(err, "Failed to load lead details."));
             } finally {
                 if (!ignore) setLoading(false);
             }

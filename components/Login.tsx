@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UsersIcon } from "@/common/icon";
 import { loginAdmin } from "@/libs/Apis";
-import { emailRegx } from "@/common/helper";
+import { emailRegx, getApiErrorMessage } from "@/common/helper";
 
 // administrator login page component
 export const Login = () => {
@@ -40,7 +40,7 @@ export const Login = () => {
       await loginAdmin({ email, password });
       router.push("/");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err?.message : "Invalid credentials";
+      const msg = getApiErrorMessage(err, "Invalid credentials");
       setError(msg);
     } finally {
       setLoading(false);

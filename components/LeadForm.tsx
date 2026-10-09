@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import { LeadRecordType, NoteRecordType, ToastInfoType, ShowToastFunction } from "@/common/types";
 import { createLead, updateLead, createLeadNote, getLeadNotes } from "@/libs/Apis";
 import { Toast } from "@/common/notification/Toast";
@@ -14,7 +13,7 @@ import {
   PlusIcon,
   CloseIcon,
 } from "@/common/icon";
-import { emailRegx, formatDate, isValidTextContent } from "@/common/helper";
+import { emailRegx, formatDate, isValidTextContent, getApiErrorMessage } from "@/common/helper";
 import { LEAD_MODE_TYPE_ENUM, LEADS_STATUS_ENUM, TOAST_TYPE_ENUM } from "@/common/enums";
 import { FormInput } from "@/micro-components/FormInput";
 import { StatusSelect } from "@/micro-components/StatusSelect";
@@ -225,23 +224,23 @@ export const LeadForm: React.FC<LeadFormProps> = ({
           );
         } catch (noteError) {
           console.error("Failed to save notes for lead:", noteError);
-          showToast(
+          const noteMsg = getApiErrorMessage(
+            noteError,
             isEdit
               ? "Lead updated, but failed to save new notes"
-              : "Lead created, but failed to save notes",
-            TOAST_TYPE_ENUM.ERROR
+              : "Lead created, but failed to save notes"
           );
+          showToast(noteMsg, TOAST_TYPE_ENUM.ERROR);
         }
       } else {
         showToast(leadActionMessage, TOAST_TYPE_ENUM.SUCCESS);
       }
       setTimeout(() => router.push(`/`), 1500);
     } catch (error: unknown) {
-      const msg = axios.isAxiosError(error)
-        ? error.response?.data?.message || `Failed to ${isEdit ? "update" : "create"} lead.`
-        : error instanceof Error
-          ? error.message
-          : `Failed to ${isEdit ? "update" : "create"} lead.`;
+      const msg = getApiErrorMessage(
+        error,
+        `Failed to ${isEdit ? "update" : "create"} lead.`
+      );
       setIsConfirmModalOpen(false);
       showToast(msg, TOAST_TYPE_ENUM.ERROR);
     } finally {

@@ -6,6 +6,7 @@ import { Modal } from "@/common/modal/Modal";
 import { SpinnerIcon, WarningIcon } from "@/common/icon";
 import { TOAST_TYPE_ENUM } from "@/common/enums";
 import { ShowToastFunction } from "@/common/types";
+import { getApiErrorMessage } from "@/common/helper";
 
 // delete confirmation modal props interface
 interface DeleteConfirmModalProps {
@@ -39,7 +40,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
       onSuccess();
       onClose();
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error?.message : "Failed to delete lead.";
+      const msg = getApiErrorMessage(error, "Failed to delete lead.");
       showToast?.(msg, TOAST_TYPE_ENUM.ERROR);
     } finally {
       setSubmitting(false);

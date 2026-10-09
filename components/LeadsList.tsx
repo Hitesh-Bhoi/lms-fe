@@ -1,5 +1,5 @@
 "use client";
-import { formatDate } from "@/common/helper";
+import { formatDate, getApiErrorMessage } from "@/common/helper";
 import {
   LeadRecordType,
   PaginationType,
@@ -234,20 +234,13 @@ export const LeadsList = () => {
         if (axios.isCancel(err) || !isCurrentRequest(requestParams, requestId)) {
           return;
         }
-        
-        if (axios.isAxiosError(err) && err.response?.status === 401) {
-          setLeadsList([]);
-          setPaginationInfo(defaultPaginationInfo);
-          setError(err.response.data?.message || "401 Unauthenticated");
-          showToast(err.response.data?.message || "401 Unauthenticated", TOAST_TYPE_ENUM.ERROR);
-          return;
-        }
-        
+
+        const backendMsg = getApiErrorMessage(err, "Failed to fetch leads from backend server");
         console.error("Failed to fetch leads:", err);
         setLeadsList([]);
         setPaginationInfo(defaultPaginationInfo);
-        setError("Failed to fetch leads from backend server");
-        showToast("Failed to fetch leads", TOAST_TYPE_ENUM.ERROR);
+        setError(backendMsg);
+        showToast(backendMsg, TOAST_TYPE_ENUM.ERROR);
       } finally {
         if (isCurrentRequest(requestParams, requestId)) {
           setLoading(false);
@@ -292,22 +285,12 @@ export const LeadsList = () => {
         return;
       }
 
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
-        setLeadsList([]);
-        setPaginationInfo(defaultPaginationInfo);
-        setError(err.response.data?.message || "401 Unauthenticated");
-        showToast(err.response.data?.message || "401 Unauthenticated", TOAST_TYPE_ENUM.ERROR);
-        return;
-      }
-
+      const backendMsg = getApiErrorMessage(err, "Failed to refresh leads from backend server");
       console.error("Failed to refresh leads:", err);
       setLeadsList([]);
       setPaginationInfo(defaultPaginationInfo);
-      setError("Failed to fetch leads from backend server");
-      showToast(
-        "Failed to fetch leads from backend server",
-        TOAST_TYPE_ENUM.ERROR,
-      );
+      setError(backendMsg);
+      showToast(backendMsg, TOAST_TYPE_ENUM.ERROR);
     } finally {
       if (isCurrentRequest(requestParams, requestId)) {
         setTimeout(() => {
