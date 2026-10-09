@@ -355,7 +355,7 @@ export const LeadsList = () => {
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50/75 border-b border-slate-200/80 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              <thead className="bg-slate-50/75 border-b border-slate-200/80 text-xs font-semibold capitalize text-slate-600">
                 <tr>
                   <th scope="col" className="px-6 py-3.5">
                     Index

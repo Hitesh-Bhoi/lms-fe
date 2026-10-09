@@ -74,7 +74,7 @@ export const StatusSelect: React.FC<StatusSelectProps> = ({
       {label && (
         <label
           htmlFor={id}
-          className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5"
+          className="block text-sm font-medium capitalize text-slate-700 mb-1.5"
         >
           {label}
         </label>
