@@ -26,6 +26,7 @@ import {
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
 import { StatusDropdownFilter } from "../micro-components/StatusDropdownFilter";
 import { Pagination } from "../micro-components/Pagination";
+import { SearchInput } from "../micro-components/SearchInput";
 
 // filter state interface
 export interface LeadsFilterState {
@@ -332,28 +333,11 @@ export const LeadsList = () => {
         <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-sm">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3.5">
             {/* search input */}
-            <div className="relative flex-1 max-w-md">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <SearchIcon className="w-4 h-4" />
-              </div>
-              <input
-                type="text"
-                value={filters.search}
-                onChange={handleSearchChange}
-                placeholder="Search leads by name or email..."
-                className="w-full pl-10 pr-9 py-2.5 text-sm bg-slate-50/80 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 text-slate-800"
-              />
-              {filters.search && (
-                <button
-                  type="button"
-                  onClick={handleClearSearch}
-                  title="Clear search query"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                >
-                  <CloseIcon className="w-4 h-4" />
-                </button>
-              )}
-            </div>
+            <SearchInput
+              value={filters.search}
+              onChange={handleSearchChange}
+              onClear={handleClearSearch}
+            />
             {/* right side: status filter, refresh, and add new lead button */}
             <div className="flex items-center gap-2.5 flex-wrap">
               {/* refresh btn */}

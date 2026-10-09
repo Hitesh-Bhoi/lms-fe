@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { LeadRecordType, NoteRecordType, ToastInfoType, ShowToastFunction } from "@/common/types";
@@ -13,18 +13,11 @@ import {
   SpinnerIcon,
   PlusIcon,
   CloseIcon,
-  ChevronDownIcon,
 } from "@/common/icon";
 import { emailRegx, formatDate, isValidTextContent } from "@/common/helper";
 import { LEAD_MODE_TYPE_ENUM, LEADS_STATUS_ENUM, TOAST_TYPE_ENUM } from "@/common/enums";
-
-// lead status options for form dropdown
-const statusFormOptions = [
-  { value: LEADS_STATUS_ENUM.NEW, label: "New", dotColor: "bg-sky-500" },
-  { value: LEADS_STATUS_ENUM.CONTACTED, label: "Contacted", dotColor: "bg-amber-500" },
-  { value: LEADS_STATUS_ENUM.QUALIFIED, label: "Qualified", dotColor: "bg-emerald-500" },
-  { value: LEADS_STATUS_ENUM.LOST, label: "Lost", dotColor: "bg-rose-500" },
-];
+import { FormInput } from "@/micro-components/FormInput";
+import { StatusSelect } from "@/micro-components/StatusSelect";
 
 // lead form props interface
 interface LeadFormProps {
@@ -69,35 +62,6 @@ export const LeadForm: React.FC<LeadFormProps> = ({
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   // used to store toast state
   const [toast, setToast] = useState<ToastInfoType | null>(null);
-  // status dropdown menu open state
-  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-  const statusDropdownRef = useRef<HTMLDivElement>(null);
-
-  // current selected status configuration
-  const currentStatusOption = useMemo(() => {
-    return (
-      statusFormOptions.find((opt) => opt.value === formData.status) ||
-      statusFormOptions[0]
-    );
-  }, [formData.status]);
-
-  // close status dropdown on click outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        statusDropdownRef.current &&
-        !statusDropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsStatusDropdownOpen(false);
-      }
-    };
-    if (isStatusDropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isStatusDropdownOpen]);
 
 
   // fetch notes data
@@ -327,178 +291,69 @@ export const LeadForm: React.FC<LeadFormProps> = ({
         <form onSubmit={handleFormSubmit} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* full name */}
-            <div className="max-w-4xl">
-              <label htmlFor="lead-name" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                Full Name {!isView && <span className="text-rose-500">*</span>}
-              </label>
-              <input
-                id="lead-name"
-                type="text"
-                value={formData.name}
-                disabled={isView}
-                onChange={(e) => {
-                  setFormData({ ...formData, name: e.target.value });
-                  if (formErrors.name)
-                    setFormErrors({ ...formErrors, name: "" });
-                }}
-                placeholder="Enter your name"
-                className={`w-full px-4 py-2.5 text-sm rounded-xl transition-all ${isView
-                  ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
-                  : formErrors.name
-                    ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
-                    : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  }`}
-              />
-              {formErrors.name && (
-                <p className="text-xs text-rose-500 mt-1 font-medium">
-                  {formErrors.name}
-                </p>
-              )}
-            </div>
+            <FormInput
+              id="lead-name"
+              label="Full Name"
+              type="text"
+              value={formData.name}
+              disabled={isView}
+              required
+              onChange={(e) => {
+                setFormData({ ...formData, name: e.target.value });
+                if (formErrors.name)
+                  setFormErrors({ ...formErrors, name: "" });
+              }}
+              placeholder="Enter your name"
+              error={formErrors.name}
+            />
 
             {/* email address */}
-            <div>
-              <label htmlFor="lead-email" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                Email Address {!isView && <span className="text-rose-500">*</span>}
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <MailIcon className="w-4 h-4" />
-                </div>
-                <input
-                  id="lead-email"
-                  type="email"
-                  value={formData.email}
-                  disabled={isView}
-                  onChange={(e) => {
-                    setFormData({ ...formData, email: e.target.value });
-                    if (formErrors.email)
-                      setFormErrors({ ...formErrors, email: "" });
-                  }}
-                  placeholder="Enter your email"
-                  className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl transition-all ${isView
-                    ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
-                    : formErrors.email
-                      ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
-                      : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                    }`}
-                />
-              </div>
-              {formErrors.email && (
-                <p className="text-xs text-rose-500 mt-1 font-medium">
-                  {formErrors.email}
-                </p>
-              )}
-            </div>
+            <FormInput
+              id="lead-email"
+              label="Email Address"
+              type="email"
+              value={formData.email}
+              disabled={isView}
+              required
+              icon={<MailIcon className="w-4 h-4" />}
+              onChange={(e) => {
+                setFormData({ ...formData, email: e.target.value });
+                if (formErrors.email)
+                  setFormErrors({ ...formErrors, email: "" });
+              }}
+              placeholder="Enter your email"
+              error={formErrors.email}
+            />
 
             {/* phone number */}
-            <div>
-              <label htmlFor="lead-phone" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                Phone Number {!isView && <span className="text-rose-500">*</span>}
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <PhoneIcon className="w-4 h-4" />
-                </div>
-                <input
-                  id="lead-phone"
-                  type="tel"
-                  value={formData.phone}
-                  disabled={isView}
-                  onChange={(e) => {
-                    setFormData({ ...formData, phone: e.target.value });
-                    if (formErrors.phone)
-                      setFormErrors({ ...formErrors, phone: "" });
-                  }}
-                  placeholder="Enter your phone"
-                  className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl transition-all ${isView
-                    ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
-                    : formErrors.phone
-                      ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
-                      : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                    }`}
-                />
-              </div>
-              {formErrors.phone && (
-                <p className="text-xs text-rose-500 mt-1 font-medium">
-                  {formErrors.phone}
-                </p>
-              )}
-            </div>
+            <FormInput
+              id="lead-phone"
+              label="Phone Number"
+              type="tel"
+              value={formData.phone}
+              disabled={isView}
+              required
+              icon={<PhoneIcon className="w-4 h-4" />}
+              onChange={(e) => {
+                setFormData({ ...formData, phone: e.target.value });
+                if (formErrors.phone)
+                  setFormErrors({ ...formErrors, phone: "" });
+              }}
+              placeholder="Enter your phone"
+              error={formErrors.phone}
+            />
 
             {/* status dropdown */}
-            <div className="relative" ref={statusDropdownRef}>
-              <label
-                htmlFor="lead-status"
-                className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5"
-              >
-                Status
-              </label>
-              {isView ? (
-                <div className="w-full px-4 py-2.5 text-sm rounded-xl bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <span className={`w-2 h-2 rounded-full ${currentStatusOption.dotColor}`} />
-                    <span className="font-medium text-slate-800">{currentStatusOption.label}</span>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <button
-                    id="lead-status"
-                    type="button"
-                    disabled={submitting}
-                    onClick={() => setIsStatusDropdownOpen((prev) => !prev)}
-                    className={`w-full px-4 py-2.5 text-sm rounded-xl transition-all flex items-center justify-between cursor-pointer ${
-                      isStatusDropdownOpen
-                        ? "bg-white border border-blue-500 ring-2 ring-blue-500/20 text-slate-800"
-                        : "bg-slate-50/70 border border-slate-200 hover:bg-white hover:border-slate-300 text-slate-800"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <span className={`w-2 h-2 rounded-full ${currentStatusOption.dotColor}`} />
-                      <span className="font-medium text-slate-800">{currentStatusOption.label}</span>
-                    </div>
-                    <ChevronDownIcon
-                      className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
-                        isStatusDropdownOpen ? "rotate-180 text-blue-600" : ""
-                      }`}
-                    />
-                  </button>
-
-                  {/* status dropdown menu */}
-                  {isStatusDropdownOpen && (
-                    <div className="absolute left-0 right-0 mt-1.5 w-full rounded-xl bg-white border border-slate-200 shadow-xl p-1.5 z-30 space-y-0.5">
-                      {statusFormOptions.map((opt) => {
-                        const isSelected = formData.status === opt.value;
-                        return (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => {
-                              setFormData((prev) => ({ ...prev, status: opt.value }));
-                              setIsStatusDropdownOpen(false);
-                            }}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer ${
-                              isSelected
-                                ? "bg-blue-50/80 text-blue-700 font-semibold"
-                                : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5">
-                              <span className={`w-2 h-2 rounded-full ${opt.dotColor}`} />
-                              <span>{opt.label}</span>
-                            </div>
-                            {isSelected && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+            <StatusSelect
+              id="lead-status"
+              label="Status"
+              value={formData.status || LEADS_STATUS_ENUM.NEW}
+              disabled={submitting}
+              isView={isView}
+              onChange={(status) => {
+                setFormData((prev) => ({ ...prev, status }));
+              }}
+            />
 
             {/* notes section */}
             <div className="sm:col-span-2 pt-1">

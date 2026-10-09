@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { AppLayoutWrapper } from "@/components/ClientLayoutWrapper";
+import { AppLayoutWrapper } from "@/components/layout/ClientLayoutWrapper";
 import { AxiosInterceptor } from "@/intercepters/AxiosInterceptor";
 import "./globals.css";
 
