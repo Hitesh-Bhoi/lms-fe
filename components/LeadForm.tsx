@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { LeadRecordType, NoteRecordType, ToastInfoType, ShowToastFunction } from "@/common/types";
@@ -13,9 +13,18 @@ import {
   SpinnerIcon,
   PlusIcon,
   CloseIcon,
+  ChevronDownIcon,
 } from "@/common/icon";
 import { emailRegx, formatDate, isValidTextContent } from "@/common/helper";
 import { LEAD_MODE_TYPE_ENUM, LEADS_STATUS_ENUM, TOAST_TYPE_ENUM } from "@/common/enums";
+
+// lead status options for form dropdown
+const statusFormOptions = [
+  { value: LEADS_STATUS_ENUM.NEW, label: "New", dotColor: "bg-sky-500" },
+  { value: LEADS_STATUS_ENUM.CONTACTED, label: "Contacted", dotColor: "bg-amber-500" },
+  { value: LEADS_STATUS_ENUM.QUALIFIED, label: "Qualified", dotColor: "bg-emerald-500" },
+  { value: LEADS_STATUS_ENUM.LOST, label: "Lost", dotColor: "bg-rose-500" },
+];
 
 // lead form props interface
 interface LeadFormProps {
@@ -60,6 +69,35 @@ export const LeadForm: React.FC<LeadFormProps> = ({
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   // used to store toast state
   const [toast, setToast] = useState<ToastInfoType | null>(null);
+  // status dropdown menu open state
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
+
+  // current selected status configuration
+  const currentStatusOption = useMemo(() => {
+    return (
+      statusFormOptions.find((opt) => opt.value === formData.status) ||
+      statusFormOptions[0]
+    );
+  }, [formData.status]);
+
+  // close status dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        statusDropdownRef.current &&
+        !statusDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsStatusDropdownOpen(false);
+      }
+    };
+    if (isStatusDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isStatusDropdownOpen]);
 
 
   // fetch notes data
@@ -289,7 +327,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
         <form onSubmit={handleFormSubmit} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* full name */}
-            <div className="sm:col-span-2">
+            <div className="max-w-4xl">
               <label htmlFor="lead-name" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
                 Full Name {!isView && <span className="text-rose-500">*</span>}
               </label>
@@ -388,28 +426,78 @@ export const LeadForm: React.FC<LeadFormProps> = ({
               )}
             </div>
 
-            {/* status */}
-            <div className="sm:col-span-2">
-              <label htmlFor="lead-status" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            {/* status dropdown */}
+            <div className="relative" ref={statusDropdownRef}>
+              <label
+                htmlFor="lead-status"
+                className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5"
+              >
                 Status
               </label>
-              <select
-                id="lead-status"
-                value={formData.status}
-                disabled={isView}
-                onChange={(e) =>
-                  setFormData({ ...formData, status: e.target.value })
-                }
-                className={`w-full px-4 py-2.5 text-sm rounded-xl transition-all ${isView
-                  ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
-                  : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800"
-                  }`}
-              >
-                <option value={LEADS_STATUS_ENUM.NEW}>New</option>
-                <option value={LEADS_STATUS_ENUM.CONTACTED}>Contacted</option>
-                <option value={LEADS_STATUS_ENUM.QUALIFIED}>Qualified</option>
-                <option value={LEADS_STATUS_ENUM.LOST}>Lost</option>
-              </select>
+              {isView ? (
+                <div className="w-full px-4 py-2.5 text-sm rounded-xl bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span className={`w-2 h-2 rounded-full ${currentStatusOption.dotColor}`} />
+                    <span className="font-medium text-slate-800">{currentStatusOption.label}</span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <button
+                    id="lead-status"
+                    type="button"
+                    disabled={submitting}
+                    onClick={() => setIsStatusDropdownOpen((prev) => !prev)}
+                    className={`w-full px-4 py-2.5 text-sm rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                      isStatusDropdownOpen
+                        ? "bg-white border border-blue-500 ring-2 ring-blue-500/20 text-slate-800"
+                        : "bg-slate-50/70 border border-slate-200 hover:bg-white hover:border-slate-300 text-slate-800"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className={`w-2 h-2 rounded-full ${currentStatusOption.dotColor}`} />
+                      <span className="font-medium text-slate-800">{currentStatusOption.label}</span>
+                    </div>
+                    <ChevronDownIcon
+                      className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                        isStatusDropdownOpen ? "rotate-180 text-blue-600" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {/* status dropdown menu */}
+                  {isStatusDropdownOpen && (
+                    <div className="absolute left-0 right-0 mt-1.5 w-full rounded-xl bg-white border border-slate-200 shadow-xl p-1.5 z-30 space-y-0.5">
+                      {statusFormOptions.map((opt) => {
+                        const isSelected = formData.status === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev) => ({ ...prev, status: opt.value }));
+                              setIsStatusDropdownOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer ${
+                              isSelected
+                                ? "bg-blue-50/80 text-blue-700 font-semibold"
+                                : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <span className={`w-2 h-2 rounded-full ${opt.dotColor}`} />
+                              <span>{opt.label}</span>
+                            </div>
+                            {isSelected && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             {/* notes section */}

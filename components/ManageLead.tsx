@@ -78,7 +78,7 @@ export const ManageLead = ({ mode }: ManageLeadProps) => {
 
     return (
         <div className="min-h-screen bg-slate-50/70 p-4 sm:p-6 lg:p-8">
-            <div className="max-w-3xl mx-auto space-y-6">
+            <div className="max-w-4xl space-y-6">
                 {/* back to home */}
                 <div className="flex items-center gap-4">
                     <Link
@@ -96,10 +96,11 @@ export const ManageLead = ({ mode }: ManageLeadProps) => {
                 {loading && (
                     <div className="bg-white rounded-2xl border border-slate-200/80 p-8 shadow-xs space-y-6 animate-pulse">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="sm:col-span-2 h-12 bg-slate-100 rounded-xl"></div>
                             <div className="h-12 bg-slate-100 rounded-xl"></div>
                             <div className="h-12 bg-slate-100 rounded-xl"></div>
-                            <div className="sm:col-span-2 h-12 bg-slate-100 rounded-xl"></div>
+                            <div className="h-12 bg-slate-100 rounded-xl"></div>
+                            <div className="h-12 bg-slate-100 rounded-xl"></div>
+                            <div className="sm:col-span-2 h-24 bg-slate-100 rounded-xl"></div>
                         </div>
                     </div>
                 )}

@@ -160,7 +160,7 @@ export const StatusDropdownFilter: React.FC<StatusDropdownFilterProps> = ({
         <div
           role="menu"
           aria-orientation="vertical"
-          className="absolute right-0 mt-2 w-45 rounded-2xl bg-white border border-slate-200/90 shadow-xl shadow-slate-900/10 p-2 z-30 animate-in fade-in zoom-in-95 duration-150 origin-top-right focus:outline-none"
+          className="absolute right-0 mt-2 w-48 rounded-2xl bg-white border border-slate-200/90 shadow-xl shadow-slate-900/10 p-2 z-30 animate-in fade-in zoom-in-95 duration-150 origin-top-right focus:outline-none"
         >
           {/* options list */}
           <div className="py-1 space-y-0.5">
