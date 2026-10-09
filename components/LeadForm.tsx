@@ -14,7 +14,7 @@ import {
   PlusIcon,
   CloseIcon,
 } from "@/common/icon";
-import { emailRegx, formatDate } from "@/common/helper";
+import { emailRegx, formatDate, isValidTextContent } from "@/common/helper";
 import { LEAD_MODE_TYPE_ENUM, LEADS_STATUS_ENUM, TOAST_TYPE_ENUM } from "@/common/enums";
 
 // lead form props interface
@@ -98,10 +98,18 @@ export const LeadForm: React.FC<LeadFormProps> = ({
 
   // save notes into local state
   const handleAddNote = () => {
-    const trimmed = currentNote.trim();
-    if (!trimmed) return;
-    setStagedNotes((prev) => [...prev, trimmed]);
+    if (!isValidTextContent(currentNote)) {
+      setFormErrors((prev) => ({
+        ...prev,
+        note: "Note content cannot be empty",
+      }));
+      return;
+    }
+    setStagedNotes((prev) => [...prev, currentNote.trim()]);
     setCurrentNote("");
+    if (formErrors.note) {
+      setFormErrors((prev) => ({ ...prev, note: "" }));
+    }
   };
 
   // remove note from state before update
@@ -119,7 +127,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
   // form validator
   const validate = () => {
     const errors: Record<string, string> = {};
-    if (!formData.name.trim()) {
+    if (!formData.name.trim() || !isValidTextContent(formData.name)) {
       errors.name = "Full name is required";
     }
     if (!formData.email.trim()) {
@@ -127,8 +135,11 @@ export const LeadForm: React.FC<LeadFormProps> = ({
     } else if (!emailRegx.test(formData.email)) {
       errors.email = "Please enter a valid email address";
     }
-    if (!formData.phone.trim()) {
+    if (!formData.phone.trim() || !isValidTextContent(formData.phone)) {
       errors.phone = "Phone number is required";
+    }
+    if (currentNote.length > 0 && !isValidTextContent(currentNote)) {
+      errors.note = "Note content cannot be empty";
     }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -165,8 +176,8 @@ export const LeadForm: React.FC<LeadFormProps> = ({
         }
 
         const hasFieldChanges = Object.keys(changedFields).length > 0;
-        const activeNote = currentNote.trim();
-        const hasNewNotes = stagedNotes.length > 0 || Boolean(activeNote);
+        const hasValidActiveNote = isValidTextContent(currentNote);
+        const hasNewNotes = stagedNotes.length > 0 || hasValidActiveNote;
 
         if (!hasFieldChanges && !hasNewNotes) {
           setIsConfirmModalOpen(false);
@@ -190,10 +201,9 @@ export const LeadForm: React.FC<LeadFormProps> = ({
       }
 
       // save all notes staged notes + active text in textarea
-      const activeNote = currentNote.trim();
       const notesToSave = [
         ...stagedNotes,
-        ...(activeNote ? [activeNote] : []),
+        ...(isValidTextContent(currentNote) ? [currentNote.trim()] : []),
       ];
 
       if (targetLeadId && notesToSave.length > 0) {
@@ -407,24 +417,40 @@ export const LeadForm: React.FC<LeadFormProps> = ({
               <div className="rounded-2xl border border-slate-200/90 bg-slate-50/50 p-4 ">
                 {/* note textarea input */}
                 <div className="space-y-2">
-                  {!isView && <div className="relative">
-                    <textarea
-                      id="lead-notes"
-                      rows={3}
-                      value={currentNote}
-                      disabled={isView || submitting}
-                      onChange={(e) => setCurrentNote(e.target.value)}
-                      placeholder="Write note here..."
-                      className={`w-full px-3.5 py-2.5 text-sm rounded-xl transition-all bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 placeholder:text-slate-400 text-slate-800 resize-y min-h-20 `}
-                    />
-                  </div>}
+                  {!isView && (
+                    <div className="relative">
+                      <textarea
+                        id="lead-notes"
+                        rows={3}
+                        value={currentNote}
+                        disabled={isView || submitting}
+                        onChange={(e) => {
+                          setCurrentNote(e.target.value);
+                          if (formErrors.note && isValidTextContent(e.target.value)) {
+                            setFormErrors((prev) => ({ ...prev, note: "" }));
+                          }
+                        }}
+                        placeholder="Write note here..."
+                        className={`w-full px-3.5 py-2.5 text-sm rounded-xl transition-all placeholder:text-slate-400 text-slate-800 resize-y min-h-20 ${
+                          formErrors.note
+                            ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
+                            : "bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        }`}
+                      />
+                      {formErrors.note && (
+                        <p className="text-xs text-rose-500 mt-1 font-medium">
+                          {formErrors.note}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {!isView && (
                     <div className="flex items-center justify-end pb-4">
                       <button
                         type="button"
                         onClick={handleAddNote}
-                        disabled={!currentNote.trim() || submitting}
+                        disabled={submitting}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-2xs"
                       >
                         <PlusIcon className="w-4 h-4" />
