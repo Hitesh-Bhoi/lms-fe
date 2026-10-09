@@ -24,7 +24,7 @@ export const createLead = async (data: LeadRecordType) => {
 };
 
 export const updateLead = async (id: string, data: Partial<LeadRecordType>) => {
-  return axios.put(`${baseUrl}/leads/${id}`, data);
+  return axios.patch(`${baseUrl}/leads/${id}`, data);
 };
 
 export const deleteLead = async (id: string) => {

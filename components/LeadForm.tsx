@@ -138,8 +138,37 @@ export const LeadForm: React.FC<LeadFormProps> = ({
       let leadActionMessage = "";
 
       if (isEdit && leadId) {
-        const res = await updateLead(leadId, payload);
-        leadActionMessage = res?.data?.message || "Lead updated successfully";
+        const changedFields: Partial<LeadRecordType> = {};
+        if (formData.name.trim() !== (initialData?.name || "").trim()) {
+          changedFields.name = formData.name.trim();
+        }
+        if (formData.email.trim() !== (initialData?.email || "").trim()) {
+          changedFields.email = formData.email.trim();
+        }
+        if (formData.phone.trim() !== (initialData?.phone || "").trim()) {
+          changedFields.phone = formData.phone.trim();
+        }
+        if (formData.status !== initialData?.status) {
+          changedFields.status = formData.status;
+        }
+
+        const hasFieldChanges = Object.keys(changedFields).length > 0;
+        const activeNote = currentNote.trim();
+        const hasNewNotes = stagedNotes.length > 0 || Boolean(activeNote);
+
+        if (!hasFieldChanges && !hasNewNotes) {
+          setIsConfirmModalOpen(false);
+          showToast("No changes detected", TOAST_TYPE_ENUM.SUCCESS);
+          setTimeout(() => router.push(`/`), 1500);
+          return;
+        }
+
+        if (hasFieldChanges) {
+          const res = await updateLead(leadId, changedFields);
+          leadActionMessage = res?.data?.message || "Lead updated successfully";
+        } else {
+          leadActionMessage = "Lead notes updated successfully";
+        }
         setIsConfirmModalOpen(false);
       } else {
         const res = await createLead(payload);
