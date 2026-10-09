@@ -52,10 +52,12 @@ export const Login = () => {
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200/80 p-8">
         <div className="text-center mb-8 flex flex-col items-center">
           <div className="h-14 w-14 rounded-2xl bg-linear-to-tr from-blue-600 to-blue-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 shrink-0">
-            <UsersIcon className="w-8 h-8" />
+            <UsersIcon className="w-6 h-6" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome to LMS</h1>
-          <p className="text-slate-500 mt-2 text-sm">Please sign in to your administrator account.</p>
+          <div className="mt-1">
+          <p className="text-xl font-bold text-slate-900 tracking-tight">Welcome to LMS</p>
+          <p className="text-slate-500 text-sm">Leads Management System</p>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -66,9 +68,11 @@ export const Login = () => {
           )}
           
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700 block">Email</label>
+            <label htmlFor="email" className="text-sm font-medium text-slate-700 block">Email</label>
             <input
+              id="email"
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@example.com"
@@ -77,9 +81,11 @@ export const Login = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700 block">Password</label>
+            <label htmlFor="password" className="text-sm font-medium text-slate-700 block">Password</label>
             <input
+              id="password"
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
