@@ -248,6 +248,7 @@ export const LeadsList = () => {
 
   // refresh handler
   const handleRefresh = async () => {
+    if (isRefreshing || loading) return;
     const requestParams = {
       search: debouncedSearch,
       status: filters.status,

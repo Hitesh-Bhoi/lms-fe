@@ -41,14 +41,18 @@ export const AxiosInterceptor: React.FC<AxiosInterceptorProps> = ({
       },
       (error) => {
         if (error.response && error.response.status === 401) {
-          // clear token and redirect with a slight delay to allow UI to show error toast
-          localStorage.removeItem("admin_token");
-          if (redirectTimeoutRef.current) {
-            clearTimeout(redirectTimeoutRef.current);
+          const isLoginRequest = error.config?.url?.includes("/auth/login");
+          if (!isLoginRequest) {
+            localStorage.removeItem("admin_token");
+            if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+              if (redirectTimeoutRef.current) {
+                clearTimeout(redirectTimeoutRef.current);
+              }
+              redirectTimeoutRef.current = setTimeout(() => {
+                router.push("/login");
+              }, 1500);
+            }
           }
-          redirectTimeoutRef.current = setTimeout(() => {
-            router.push("/login");
-          }, 1500);
         }
         return Promise.reject(error);
       },

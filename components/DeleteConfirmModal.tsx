@@ -26,7 +26,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
 
   const handleConfirm = async () => {
-    if (!leadId) return;
+    if (submitting || !leadId) return;
     setSubmitting(true);
     try {
       const res = await deleteLead(leadId);

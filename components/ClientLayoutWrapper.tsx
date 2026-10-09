@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { BaseLayout } from "./BaseLayout";
 import { getAdminProfile } from "@/libs/Apis";
-import { AxiosInterceptor } from "../intercepters/AxiosInterceptor";
 
 interface AppLayoutWrapperProps {
   children: React.ReactNode;
@@ -32,8 +31,15 @@ export const AppLayoutWrapper: React.FC<AppLayoutWrapperProps> = ({
         }
       }
     };
-    checkAuth();
-  }, [pathname, router]);
+
+    if (isAuthenticated === null) {
+      checkAuth();
+    } else if (isAuthenticated && pathname === "/login") {
+      checkAuth();
+    } else if (!isAuthenticated && pathname !== "/login") {
+      checkAuth();
+    }
+  }, [pathname, router, isAuthenticated]);
 
   // prevent hydration mismatch
   if (isAuthenticated === null) {
@@ -41,7 +47,7 @@ export const AppLayoutWrapper: React.FC<AppLayoutWrapperProps> = ({
   }
 
   if (pathname === "/login") {
-    return <AxiosInterceptor>{children}</AxiosInterceptor>;
+    return <>{children}</>;
   }
 
   // prevent flashing protected content before redirect takes effect
@@ -49,9 +55,5 @@ export const AppLayoutWrapper: React.FC<AppLayoutWrapperProps> = ({
     return null;
   }
 
-  return (
-    <AxiosInterceptor>
-      <BaseLayout>{children}</BaseLayout>
-    </AxiosInterceptor>
-  );
+  return <BaseLayout>{children}</BaseLayout>;
 };

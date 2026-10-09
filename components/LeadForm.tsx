@@ -63,19 +63,29 @@ export const LeadForm: React.FC<LeadFormProps> = ({
 
   // fetch notes data
   useEffect(() => {
+    let ignore = false;
     const getLeadNoteRecords = async () => {
       if (isAdd || !leadId) return;
       try {
         const res = await getLeadNotes(leadId);
-        setExistingNotes(res.data?.data || []);
+        if (!ignore) {
+          setExistingNotes(res.data?.data || []);
+        }
       } catch {
-        setExistingNotes([]);
+        if (!ignore) {
+          setExistingNotes([]);
+        }
       } finally {
-        setNotesLoading(false);
+        if (!ignore) {
+          setNotesLoading(false);
+        }
       }
     };
 
     getLeadNoteRecords();
+    return () => {
+      ignore = true;
+    };
   }, [isAdd, leadId]);
   // sort notes
   const sortedExistingNotes = useMemo(() => {
@@ -125,6 +135,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
 
   // api handle for both add and edit
   const handleSubmitApi = async () => {
+    if (submitting) return;
     setSubmitting(true);
     try {
       const payload: LeadRecordType = {
@@ -186,9 +197,11 @@ export const LeadForm: React.FC<LeadFormProps> = ({
 
       if (targetLeadId && notesToSave.length > 0) {
         try {
-          for (const noteContent of notesToSave) {
-            await createLeadNote(targetLeadId, { content: noteContent });
-          }
+          await Promise.all(
+            notesToSave.map((noteContent) =>
+              createLeadNote(targetLeadId, { content: noteContent })
+            )
+          );
           showToast(
             isEdit
               ? "Lead and new notes updated successfully"

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ReactNode } from "react";
 import { AppLayoutWrapper } from "@/components/ClientLayoutWrapper";
+import { AxiosInterceptor } from "@/intercepters/AxiosInterceptor";
 import "./globals.css";
 
 interface LayoutProps {
@@ -30,7 +31,9 @@ export default function RootLayout({ children }: LayoutProps) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <AppLayoutWrapper>{children}</AppLayoutWrapper>
+        <AxiosInterceptor>
+          <AppLayoutWrapper>{children}</AppLayoutWrapper>
+        </AxiosInterceptor>
       </body>
     </html>
   );
