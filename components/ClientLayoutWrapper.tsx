@@ -25,7 +25,7 @@ export const AppLayoutWrapper: React.FC<AppLayoutWrapperProps> = ({
         if (pathname === "/login") {
           router.push("/");
         }
-      } catch (error) {
+      } catch {
         setIsAuthenticated(false);
         if (pathname !== "/login") {
           router.push("/login");

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
@@ -12,8 +12,11 @@ export const AxiosInterceptor: React.FC<AxiosInterceptorProps> = ({
 }) => {
   const router = useRouter();
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     // request interceptor to attach the token
     const requestInterceptor = axios.interceptors.request.use(
       (config) => {
@@ -28,20 +31,41 @@ export const AxiosInterceptor: React.FC<AxiosInterceptorProps> = ({
 
     // response interceptor to handle 401 errors globally
     const responseInterceptor = axios.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        // clear any pending redirect if authentication / request succeeds
+        if (redirectTimeoutRef.current) {
+          clearTimeout(redirectTimeoutRef.current);
+          redirectTimeoutRef.current = null;
+        }
+        return response;
+      },
       (error) => {
         if (error.response && error.response.status === 401) {
           // clear token and redirect with a slight delay to allow UI to show error toast
           localStorage.removeItem("admin_token");
-          setTimeout(() => {
+          if (redirectTimeoutRef.current) {
+            clearTimeout(redirectTimeoutRef.current);
+          }
+          redirectTimeoutRef.current = setTimeout(() => {
             router.push("/login");
           }, 1500);
         }
         return Promise.reject(error);
       },
     );
-    setIsInitialized(true);
+
+    queueMicrotask(() => {
+      if (isMounted) {
+        setIsInitialized(true);
+      }
+    });
+
     return () => {
+      isMounted = false;
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+        redirectTimeoutRef.current = null;
+      }
       axios.interceptors.request.eject(requestInterceptor);
       axios.interceptors.response.eject(responseInterceptor);
     };
