@@ -100,7 +100,7 @@ export const Topbar: React.FC<TopbarProps> = ({ isOpen, onToggle }) => {
         <button
           type="button"
           onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-          className="w-10 h-10 rounded-full bg-linear-to-tr from-indigo-600 to-blue-500 text-white flex items-center justify-center shadow-xs hover:ring-2 hover:ring-indigo-500/20 transition-all cursor-pointer"
+          className="w-10 h-10 rounded-full bg-linear-to-tr from-blue-600 to-blue-400 text-white flex items-center justify-center shadow-xs hover:ring-2 hover:ring-blue-500/20 transition-all cursor-pointer"
           title="Profile menu"
           aria-label="Profile menu"
         >
@@ -112,7 +112,7 @@ export const Topbar: React.FC<TopbarProps> = ({ isOpen, onToggle }) => {
             <Link
               href="/profile"
               onClick={() => setIsProfileMenuOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors"
+              className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
             >
               <UserIcon className="w-4 h-4 shrink-0 text-slate-400" />
               <span>Profile</span>

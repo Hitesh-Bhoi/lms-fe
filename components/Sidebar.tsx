@@ -68,7 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           {/* Sidebar Header */}
           <div className="h-16 px-4 flex items-center border-b border-slate-200/80 shrink-0">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-linear-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-xs shrink-0">
+              <div className="h-9 w-9 rounded-xl bg-linear-to-tr from-blue-600 to-blue-400 flex items-center justify-center text-white shadow-xs shrink-0">
                 <UsersIcon className="w-5 h-5" />
               </div>
               <span className="font-bold text-slate-900 text-base tracking-tight whitespace-nowrap">
@@ -92,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                   }}
                   className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
                     item.isActive
-                      ? "bg-indigo-50 text-indigo-600 font-semibold"
+                      ? "bg-blue-50 text-blue-600 font-semibold"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
@@ -132,7 +132,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                   }}
                   className={`flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
                     pathname === "/profile"
-                      ? "bg-indigo-50 text-indigo-600 font-semibold"
+                      ? "bg-blue-50 text-blue-600 font-semibold"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >

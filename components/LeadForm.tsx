@@ -255,7 +255,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                   ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
                   : formErrors.name
                     ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
-                    : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   }`}
               />
               {formErrors.name && (
@@ -289,7 +289,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                     ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
                     : formErrors.email
                       ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
-                      : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                      : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     }`}
                 />
               </div>
@@ -324,7 +324,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                     ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
                     : formErrors.phone
                       ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
-                      : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                      : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     }`}
                 />
               </div>
@@ -349,7 +349,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                 }
                 className={`w-full px-4 py-2.5 text-sm rounded-xl transition-all ${isView
                   ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
-                  : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800"
+                  : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800"
                   }`}
               >
                 <option value={LEADS_STATUS_ENUM.NEW}>New</option>
@@ -372,7 +372,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                       disabled={isView || submitting}
                       onChange={(e) => setCurrentNote(e.target.value)}
                       placeholder="Write note here..."
-                      className={`w-full px-3.5 py-2.5 text-sm rounded-xl transition-all bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-slate-400 text-slate-800 resize-y min-h-20 `}
+                      className={`w-full px-3.5 py-2.5 text-sm rounded-xl transition-all bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 placeholder:text-slate-400 text-slate-800 resize-y min-h-20 `}
                     />
                   </div>}
 
@@ -428,7 +428,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                           className="group flex items-start justify-between gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs text-xs text-slate-700 hover:border-slate-300 transition-all"
                         >
                           <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                            <span className="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-[10px] font-semibold">
+                            <span className="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-[10px] font-semibold">
                               {idx + 1}
                             </span>
                             <div className="flex-1 min-w-0">
@@ -461,7 +461,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                           className="group flex items-start justify-between gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs text-xs text-slate-700 hover:border-slate-300 transition-all"
                         >
                           <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                            <span className="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-[10px] font-semibold">
+                            <span className="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-[10px] font-semibold">
                               {sortedExistingNotes.length + idx + 1}
                             </span>
                             <p className="whitespace-pre-wrap wrap-break-words flex-1 text-slate-800 leading-relaxed">
@@ -520,7 +520,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-700 active:bg-indigo-800 text-white font-medium text-sm rounded-xl shadow-sm shadow-indigo-600/30 transition-all hover:shadow-indigo-600/40 disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium text-sm rounded-xl shadow-sm shadow-blue-500/25 transition-all hover:shadow-blue-500/35 disabled:opacity-50 cursor-pointer"
                 >
                   {submitting && <SpinnerIcon className="w-4 h-4" />}
                   <span>{submitting ? "Saving..." : "Save"}</span>

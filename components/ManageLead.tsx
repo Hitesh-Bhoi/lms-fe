@@ -73,9 +73,9 @@ export const ManageLead = ({ mode }: ManageLeadProps) => {
                 <div className="flex items-center gap-4">
                     <Link
                         href="/"
-                        className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors cursor-pointer group"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors cursor-pointer group"
                     >
-                        <span className="p-1.5 rounded-lg bg-white border border-slate-200 group-hover:border-indigo-200 group-hover:bg-indigo-50 transition-colors">
+                        <span className="p-1.5 rounded-lg bg-white border border-slate-200 group-hover:border-blue-200 group-hover:bg-blue-50 transition-colors">
                             <ArrowLeftIcon className="w-4 h-4" />
                         </span>
                         <span>Back to Home</span>
@@ -117,7 +117,7 @@ export const ManageLead = ({ mode }: ManageLeadProps) => {
                             </button>
                             <Link
                                 href="/"
-                                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors shadow-xs"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-xs shadow-blue-500/20"
                             >
                                 Return to Home
                             </Link>

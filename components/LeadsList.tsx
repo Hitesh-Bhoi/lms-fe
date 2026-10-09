@@ -330,7 +330,7 @@ export const LeadsList = () => {
                 value={filters.search}
                 onChange={handleSearchChange}
                 placeholder="Search leads by name or email..."
-                className="w-full pl-10 pr-9 py-2.5 text-sm bg-slate-50/80 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400 text-slate-800"
+                className="w-full pl-10 pr-9 py-2.5 text-sm bg-slate-50/80 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 text-slate-800"
               />
               {filters.search && (
                 <button
@@ -367,7 +367,7 @@ export const LeadsList = () => {
               {/* add new lead btn */}
               <Link
                 href="/leads/add"
-                className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium text-sm rounded-xl shadow-sm shadow-indigo-600/30 transition-all hover:shadow-indigo-600/40 active:scale-98"
+                className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium text-sm rounded-xl shadow-sm shadow-blue-500/25 transition-all hover:shadow-blue-500/35 active:scale-98"
               >
                 <PlusIcon className="w-4 h-4" />
                 <span>Add New Lead</span>
@@ -492,7 +492,7 @@ export const LeadsList = () => {
                             <Link
                               href={`/leads/${lead._id}`}
                               title="View Lead Details"
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors inline-flex items-center justify-center"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors inline-flex items-center justify-center"
                             >
                               <ViewIcon className="w-5 h-5" />
                             </Link>
@@ -556,7 +556,7 @@ export const LeadsList = () => {
                       <div className="max-w-md mx-auto">
                         <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mx-auto">
                           {hasActiveFilters ? (
-                            <FilterIcon className="w-6 h-6 text-indigo-500" />
+                            <FilterIcon className="w-6 h-6 text-blue-500" />
                           ) : (
                             <SearchIcon className="w-6 h-6" />
                           )}

@@ -108,7 +108,7 @@ export const Pagination: React.FC<PaginationProps> = ({
                 aria-current={isCurrent ? "page" : undefined}
                 className={`min-w-8 h-8 px-2 inline-flex items-center justify-center text-xs sm:text-sm font-medium rounded-lg transition-all cursor-pointer ${
                   isCurrent
-                    ? "bg-indigo-600 text-white font-semibold shadow-xs"
+                    ? "bg-blue-600 text-white font-semibold shadow-xs shadow-blue-500/20"
                     : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                 } disabled:cursor-not-allowed`}
               >

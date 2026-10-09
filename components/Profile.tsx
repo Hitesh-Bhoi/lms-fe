@@ -8,7 +8,7 @@ export const Profile = () => {
         <div className="max-w-3xl mx-auto space-y-6">
           <header className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-sm flex items-center justify-between">
             <div className="flex items-center gap-3.5">
-              <div className="h-11 w-11 rounded-xl bg-linear-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+              <div className="h-11 w-11 rounded-xl bg-linear-to-tr from-blue-600 to-blue-400 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
                 <UserIcon className="w-6 h-6" />
               </div>
               <div>

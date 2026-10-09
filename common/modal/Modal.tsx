@@ -111,7 +111,7 @@ export const Modal: React.FC<ModalProps> = ({
         {title && (
           <div className="px-6 py-4.5 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              {icon && <span className="p-2 rounded-xl bg-indigo-50 text-indigo-600">{icon}</span>}
+              {icon && <span className="p-2 rounded-xl bg-blue-50 text-blue-600">{icon}</span>}
               <h3 id={titleId} className="text-base font-bold text-slate-900">{title}</h3>
             </div>
             <button
