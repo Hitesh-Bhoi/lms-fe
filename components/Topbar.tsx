@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { MenuIcon, UserIcon, LogoutIcon } from "@/common/icon";
+import { logoutAdmin } from "@/libs/Apis";
 
 interface TopbarProps {
   isOpen: boolean;
@@ -21,10 +22,12 @@ const getPageTitle = (pathname: string): string => {
 
 export const Topbar: React.FC<TopbarProps> = ({ isOpen, onToggle }) => {
   const pathname = usePathname();
+  const router = useRouter();
   const pageTitle = getPageTitle(pathname);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState<boolean>(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
+  // close the profile menu on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -39,6 +42,17 @@ export const Topbar: React.FC<TopbarProps> = ({ isOpen, onToggle }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // admin logout
+  const handleLogoutAdmin = async () => {
+    setIsProfileMenuOpen(false);
+    try {
+      await logoutAdmin();
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   return (
     <header className="h-16 bg-white border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-20 shrink-0">
@@ -57,7 +71,7 @@ export const Topbar: React.FC<TopbarProps> = ({ isOpen, onToggle }) => {
         </span>
       </div>
 
-      {/* Profile Menu */}
+      {/* profile menu */}
       <div className="relative" ref={profileMenuRef}>
         <button
           type="button"
@@ -81,7 +95,7 @@ export const Topbar: React.FC<TopbarProps> = ({ isOpen, onToggle }) => {
             </Link>
             <button
               type="button"
-              onClick={() => setIsProfileMenuOpen(false)}
+              onClick={handleLogoutAdmin}
               className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer text-left"
             >
               <LogoutIcon className="w-4 h-4 shrink-0" />

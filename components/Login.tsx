@@ -2,44 +2,38 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UsersIcon } from "@/common/icon";
+import { loginAdmin } from "@/libs/Apis";
+import { emailRegx } from "@/common/helper";
 
 export const Login = () => {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    // Basic validation
+    // basic validation
     if (!email || !password) {
       setError("Please enter both email and password.");
       return;
     }
 
-    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+    if (!emailRegx.test(email)) {
       setError("Please enter a valid email address.");
       return;
     }
 
-    // In a real application, replace this with your actual login API endpoint
-    // e.g. const response = await fetch("http://localhost:5000/api/auth/login", ...)
     setLoading(true);
     try {
-      // Simulate network request
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For now, simulate a successful login
-      console.log("Logging in admin:", email);
-      
-      // Save a simulated token
-      localStorage.setItem("admin_token", "dummy-token-for-now");
+      await loginAdmin({ email, password });
       router.push("/");
-    } catch (err: any) {
-      setError(err.message || "Invalid credentials");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err?.message : "Invalid credentials";
+      setError(msg);
     } finally {
       setLoading(false);
     }
