@@ -2,6 +2,7 @@
 import React from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/common/icon";
 
+// pagination component props interface
 export interface PaginationProps {
   page: number;
   totalPages: number;
@@ -12,6 +13,7 @@ export interface PaginationProps {
   onPageChange: (newPage: number) => void;
   disabled?: boolean;
 }
+
 // function to generate array of page numbers with trimmed ellipsis notation
 export const getPaginationPages = (
   currentPage: number,

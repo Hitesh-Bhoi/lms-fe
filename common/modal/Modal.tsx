@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useId } from "react";
 import { CloseIcon } from "../icon";
 
+// modal dialog component props interface
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;

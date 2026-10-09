@@ -5,6 +5,7 @@ import { deleteLead } from "@/libs/Apis";
 import { Modal } from "@/common/modal/Modal";
 import { SpinnerIcon, WarningIcon } from "@/common/icon";
 import { TOAST_TYPE_ENUM } from "@/common/enums";
+import { ShowToastFunction } from "@/common/types";
 
 // delete confirmation modal props interface
 interface DeleteConfirmModalProps {
@@ -13,7 +14,7 @@ interface DeleteConfirmModalProps {
   onSuccess: () => void;
   leadId: string;
   leadName: string;
-  showToast?: (message: string, type?: TOAST_TYPE_ENUM) => void;
+  showToast?: ShowToastFunction;
 }
 
 // modal dialog to confirm lead deletion

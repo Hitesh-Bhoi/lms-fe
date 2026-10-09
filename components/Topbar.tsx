@@ -6,6 +6,7 @@ import { MenuIcon, UserIcon, LogoutIcon } from "@/common/icon";
 import { logoutAdmin } from "@/libs/Apis";
 import { Toast } from "@/common/notification/Toast";
 import { TOAST_TYPE_ENUM } from "@/common/enums";
+import { ToastInfoType } from "@/common/types";
 
 // topbar component props interface
 interface TopbarProps {
@@ -38,10 +39,7 @@ export const Topbar: React.FC<TopbarProps> = ({ isOpen, onToggle }) => {
   // logout request in-flight loading state
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
   // toast notification state
-  const [toast, setToast] = useState<{
-    message: string;
-    type: TOAST_TYPE_ENUM;
-  } | null>(null);
+  const [toast, setToast] = useState<ToastInfoType | null>(null);
   // ref to profile menu container for outside click detection
   const profileMenuRef = useRef<HTMLDivElement>(null);
 

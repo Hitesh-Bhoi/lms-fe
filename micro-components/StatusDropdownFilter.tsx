@@ -6,12 +6,14 @@ import {
   ChevronDownIcon,
   CloseIcon,
 } from "@/common/icon";
-// lead status options type
+
+// lead status dropdown option interface
 export interface StatusOption {
   label: string;
   value: string;
   dotColor: string;
 }
+
 // lead status dropdown options
 export const statusOptions: StatusOption[] = [
   {

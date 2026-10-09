@@ -1,6 +1,11 @@
 "use client";
 import { formatDate } from "@/common/helper";
-import { LeadRecordType, PaginationType } from "@/common/types";
+import {
+  LeadRecordType,
+  PaginationType,
+  ToastInfoType,
+  ShowToastFunction,
+} from "@/common/types";
 import { getAllLeadsList } from "@/libs/Apis";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
@@ -44,11 +49,17 @@ const defaultFilterState: LeadsFilterState = {
   status: "",
 };
 
+// leads status badge styling configuration
+interface StatusBadgeConfigType {
+  label: string;
+  bg: string;
+  text: string;
+  border: string;
+  dot: string;
+}
+
 // leads status badge styling by status
-const statusConfig: Record<
-  string,
-  { label: string; bg: string; text: string; border: string; dot: string }
-> = {
+const statusConfig: Record<string, StatusBadgeConfigType> = {
   [LEADS_STATUS_ENUM.NEW]: {
     label: "New",
     bg: "bg-sky-50",
@@ -156,11 +167,8 @@ export const LeadsList = () => {
   const [deleteLeadTarget, setDeleteLeadTarget] =
     useState<LeadRecordType | null>(null);
   // toast notification state
-  const [toast, setToast] = useState<{
-    message: string;
-    type: TOAST_TYPE_ENUM;
-  } | null>(null);
-  const showToast = (
+  const [toast, setToast] = useState<ToastInfoType | null>(null);
+  const showToast: ShowToastFunction = (
     message: string,
     type: TOAST_TYPE_ENUM = TOAST_TYPE_ENUM.SUCCESS,
   ) => {

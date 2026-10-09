@@ -4,6 +4,7 @@ import React from "react";
 import { Modal } from "@/common/modal/Modal";
 import { SpinnerIcon, EditIcon } from "@/common/icon";
 
+// edit confirmation modal props interface
 interface EditConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;

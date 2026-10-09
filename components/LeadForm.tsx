@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { LeadRecordType, NoteRecordType } from "@/common/types";
+import { LeadRecordType, NoteRecordType, ToastInfoType, ShowToastFunction } from "@/common/types";
 import { createLead, updateLead, createLeadNote, getLeadNotes } from "@/libs/Apis";
 import { Toast } from "@/common/notification/Toast";
 import { EditConfirmModal } from "./EditConfirmModal";
@@ -59,10 +59,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
   // used to store confirmation modal state
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   // used to store toast state
-  const [toast, setToast] = useState<{
-    message: string;
-    type: TOAST_TYPE_ENUM;
-  } | null>(null);
+  const [toast, setToast] = useState<ToastInfoType | null>(null);
 
 
   // fetch notes data
@@ -112,7 +109,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
     setStagedNotes((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const showToast = (
+  const showToast: ShowToastFunction = (
     message: string,
     type: TOAST_TYPE_ENUM = TOAST_TYPE_ENUM.SUCCESS
   ) => {

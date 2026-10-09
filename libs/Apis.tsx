@@ -4,6 +4,7 @@ import { LeadRecordType } from "@/common/types";
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 axios.defaults.withCredentials = true;
 
+// api query parameters for fetching leads
 export interface GetLeadsParams {
   search?: string;
   status?: string;
