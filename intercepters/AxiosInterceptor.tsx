@@ -30,11 +30,12 @@ export const AxiosInterceptor: React.FC<AxiosInterceptorProps> = ({
     const responseInterceptor = axios.interceptors.response.use(
       (response) => response,
       (error) => {
-        console.log("error login", error);
         if (error.response && error.response.status === 401) {
-          // clear token and redirect to login on 401 unauthorized
+          // clear token and redirect with a slight delay to allow UI to show error toast
           localStorage.removeItem("admin_token");
-          router.push("/login");
+          setTimeout(() => {
+            router.push("/login");
+          }, 1500);
         }
         return Promise.reject(error);
       },
