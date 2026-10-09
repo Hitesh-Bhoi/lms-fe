@@ -5,16 +5,20 @@ import { deleteLead } from "@/libs/Apis";
 import { Modal } from "@/common/modal/Modal";
 import { SpinnerIcon, WarningIcon } from "@/common/icon";
 import { TOAST_TYPE_ENUM } from "@/common/enums";
+import { ShowToastFunction } from "@/common/types";
+import { getApiErrorMessage } from "@/common/helper";
 
+// delete confirmation modal props interface
 interface DeleteConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
   leadId: string;
   leadName: string;
-  showToast?: (message: string, type?: TOAST_TYPE_ENUM) => void;
+  showToast?: ShowToastFunction;
 }
 
+// modal dialog to confirm lead deletion
 export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   isOpen,
   onClose,
@@ -23,10 +27,12 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   leadName,
   showToast,
 }) => {
+  // submitting state during deletion api call
   const [submitting, setSubmitting] = useState(false);
 
+  // handle lead deletion api submission
   const handleConfirm = async () => {
-    if (!leadId) return;
+    if (submitting || !leadId) return;
     setSubmitting(true);
     try {
       const res = await deleteLead(leadId);
@@ -34,7 +40,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
       onSuccess();
       onClose();
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error?.message : "Failed to delete lead.";
+      const msg = getApiErrorMessage(error, "Failed to delete lead.");
       showToast?.(msg, TOAST_TYPE_ENUM.ERROR);
     } finally {
       setSubmitting(false);

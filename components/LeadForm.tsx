@@ -1,8 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
-import { LeadRecordType, NoteRecordType } from "@/common/types";
+import { LeadRecordType, NoteRecordType, ToastInfoType, ShowToastFunction } from "@/common/types";
 import { createLead, updateLead, createLeadNote, getLeadNotes } from "@/libs/Apis";
 import { Toast } from "@/common/notification/Toast";
 import { EditConfirmModal } from "./EditConfirmModal";
@@ -14,21 +13,27 @@ import {
   PlusIcon,
   CloseIcon,
 } from "@/common/icon";
-import { emailRegx, formatDate } from "@/common/helper";
+import { emailRegx, formatDate, isValidTextContent, getApiErrorMessage } from "@/common/helper";
 import { LEAD_MODE_TYPE_ENUM, LEADS_STATUS_ENUM, TOAST_TYPE_ENUM } from "@/common/enums";
+import { FormInput } from "@/micro-components/FormInput";
+import { StatusSelect } from "@/micro-components/StatusSelect";
 
+// lead form props interface
 interface LeadFormProps {
   mode: LEAD_MODE_TYPE_ENUM;
   initialData?: LeadRecordType | null;
   leadId?: string;
 }
 
+// reusable lead form component for create, edit, and view modes
 export const LeadForm: React.FC<LeadFormProps> = ({
   mode,
   initialData,
   leadId,
 }) => {
+  // router instance for navigation
   const router = useRouter();
+  // check current mode of the form
   const isView = mode === LEAD_MODE_TYPE_ENUM.VIEW;
   const isEdit = mode === LEAD_MODE_TYPE_ENUM.EDIT;
   const isAdd = mode === LEAD_MODE_TYPE_ENUM.ADD;
@@ -55,27 +60,34 @@ export const LeadForm: React.FC<LeadFormProps> = ({
   // used to store confirmation modal state
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   // used to store toast state
-  const [toast, setToast] = useState<{
-    message: string;
-    type: TOAST_TYPE_ENUM;
-  } | null>(null);
+  const [toast, setToast] = useState<ToastInfoType | null>(null);
 
 
   // fetch notes data
   useEffect(() => {
+    let ignore = false;
     const getLeadNoteRecords = async () => {
       if (isAdd || !leadId) return;
       try {
         const res = await getLeadNotes(leadId);
-        setExistingNotes(res.data?.data || []);
+        if (!ignore) {
+          setExistingNotes(res.data?.data || []);
+        }
       } catch {
-        setExistingNotes([]);
+        if (!ignore) {
+          setExistingNotes([]);
+        }
       } finally {
-        setNotesLoading(false);
+        if (!ignore) {
+          setNotesLoading(false);
+        }
       }
     };
 
     getLeadNoteRecords();
+    return () => {
+      ignore = true;
+    };
   }, [isAdd, leadId]);
   // sort notes
   const sortedExistingNotes = useMemo(() => {
@@ -87,10 +99,18 @@ export const LeadForm: React.FC<LeadFormProps> = ({
 
   // save notes into local state
   const handleAddNote = () => {
-    const trimmed = currentNote.trim();
-    if (!trimmed) return;
-    setStagedNotes((prev) => [...prev, trimmed]);
+    if (!isValidTextContent(currentNote)) {
+      setFormErrors((prev) => ({
+        ...prev,
+        note: "Note content cannot be empty",
+      }));
+      return;
+    }
+    setStagedNotes((prev) => [...prev, currentNote.trim()]);
     setCurrentNote("");
+    if (formErrors.note) {
+      setFormErrors((prev) => ({ ...prev, note: "" }));
+    }
   };
 
   // remove note from state before update
@@ -98,7 +118,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
     setStagedNotes((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const showToast = (
+  const showToast: ShowToastFunction = (
     message: string,
     type: TOAST_TYPE_ENUM = TOAST_TYPE_ENUM.SUCCESS
   ) => {
@@ -108,7 +128,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
   // form validator
   const validate = () => {
     const errors: Record<string, string> = {};
-    if (!formData.name.trim()) {
+    if (!formData.name.trim() || !isValidTextContent(formData.name)) {
       errors.name = "Full name is required";
     }
     if (!formData.email.trim()) {
@@ -116,8 +136,11 @@ export const LeadForm: React.FC<LeadFormProps> = ({
     } else if (!emailRegx.test(formData.email)) {
       errors.email = "Please enter a valid email address";
     }
-    if (!formData.phone.trim()) {
+    if (!formData.phone.trim() || !isValidTextContent(formData.phone)) {
       errors.phone = "Phone number is required";
+    }
+    if (currentNote.length > 0 && !isValidTextContent(currentNote)) {
+      errors.note = "Note content cannot be empty";
     }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -125,6 +148,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
 
   // api handle for both add and edit
   const handleSubmitApi = async () => {
+    if (submitting) return;
     setSubmitting(true);
     try {
       const payload: LeadRecordType = {
@@ -138,8 +162,37 @@ export const LeadForm: React.FC<LeadFormProps> = ({
       let leadActionMessage = "";
 
       if (isEdit && leadId) {
-        const res = await updateLead(leadId, payload);
-        leadActionMessage = res?.data?.message || "Lead updated successfully";
+        const changedFields: Partial<LeadRecordType> = {};
+        if (formData.name.trim() !== (initialData?.name || "").trim()) {
+          changedFields.name = formData.name.trim();
+        }
+        if (formData.email.trim() !== (initialData?.email || "").trim()) {
+          changedFields.email = formData.email.trim();
+        }
+        if (formData.phone.trim() !== (initialData?.phone || "").trim()) {
+          changedFields.phone = formData.phone.trim();
+        }
+        if (formData.status !== initialData?.status) {
+          changedFields.status = formData.status;
+        }
+
+        const hasFieldChanges = Object.keys(changedFields).length > 0;
+        const hasValidActiveNote = isValidTextContent(currentNote);
+        const hasNewNotes = stagedNotes.length > 0 || hasValidActiveNote;
+
+        if (!hasFieldChanges && !hasNewNotes) {
+          setIsConfirmModalOpen(false);
+          showToast("No changes detected", TOAST_TYPE_ENUM.SUCCESS);
+          setTimeout(() => router.push(`/`), 1500);
+          return;
+        }
+
+        if (hasFieldChanges) {
+          const res = await updateLead(leadId, changedFields);
+          leadActionMessage = res?.data?.message || "Lead updated successfully";
+        } else {
+          leadActionMessage = "Lead notes updated successfully";
+        }
         setIsConfirmModalOpen(false);
       } else {
         const res = await createLead(payload);
@@ -149,17 +202,18 @@ export const LeadForm: React.FC<LeadFormProps> = ({
       }
 
       // save all notes staged notes + active text in textarea
-      const activeNote = currentNote.trim();
       const notesToSave = [
         ...stagedNotes,
-        ...(activeNote ? [activeNote] : []),
+        ...(isValidTextContent(currentNote) ? [currentNote.trim()] : []),
       ];
 
       if (targetLeadId && notesToSave.length > 0) {
         try {
-          for (const noteContent of notesToSave) {
-            await createLeadNote(targetLeadId, { content: noteContent });
-          }
+          await Promise.all(
+            notesToSave.map((noteContent) =>
+              createLeadNote(targetLeadId, { content: noteContent })
+            )
+          );
           showToast(
             isEdit
               ? "Lead and new notes updated successfully"
@@ -170,23 +224,23 @@ export const LeadForm: React.FC<LeadFormProps> = ({
           );
         } catch (noteError) {
           console.error("Failed to save notes for lead:", noteError);
-          showToast(
+          const noteMsg = getApiErrorMessage(
+            noteError,
             isEdit
               ? "Lead updated, but failed to save new notes"
-              : "Lead created, but failed to save notes",
-            TOAST_TYPE_ENUM.ERROR
+              : "Lead created, but failed to save notes"
           );
+          showToast(noteMsg, TOAST_TYPE_ENUM.ERROR);
         }
       } else {
         showToast(leadActionMessage, TOAST_TYPE_ENUM.SUCCESS);
       }
       setTimeout(() => router.push(`/`), 1500);
     } catch (error: unknown) {
-      const msg = axios.isAxiosError(error)
-        ? error.response?.data?.message || `Failed to ${isEdit ? "update" : "create"} lead.`
-        : error instanceof Error
-          ? error.message
-          : `Failed to ${isEdit ? "update" : "create"} lead.`;
+      const msg = getApiErrorMessage(
+        error,
+        `Failed to ${isEdit ? "update" : "create"} lead.`
+      );
       setIsConfirmModalOpen(false);
       showToast(msg, TOAST_TYPE_ENUM.ERROR);
     } finally {
@@ -236,152 +290,110 @@ export const LeadForm: React.FC<LeadFormProps> = ({
         <form onSubmit={handleFormSubmit} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* full name */}
-            <div className="sm:col-span-2">
-              <label htmlFor="lead-name" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                Full Name {!isView && <span className="text-rose-500">*</span>}
-              </label>
-              <input
-                id="lead-name"
-                type="text"
-                value={formData.name}
-                disabled={isView}
-                onChange={(e) => {
-                  setFormData({ ...formData, name: e.target.value });
-                  if (formErrors.name)
-                    setFormErrors({ ...formErrors, name: "" });
-                }}
-                placeholder="Enter your name"
-                className={`w-full px-4 py-2.5 text-sm rounded-xl transition-all ${isView
-                  ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
-                  : formErrors.name
-                    ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
-                    : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                  }`}
-              />
-              {formErrors.name && (
-                <p className="text-xs text-rose-500 mt-1 font-medium">
-                  {formErrors.name}
-                </p>
-              )}
-            </div>
+            <FormInput
+              id="lead-name"
+              label="Full Name"
+              type="text"
+              value={formData.name}
+              disabled={isView}
+              required
+              onChange={(e) => {
+                setFormData({ ...formData, name: e.target.value });
+                if (formErrors.name)
+                  setFormErrors({ ...formErrors, name: "" });
+              }}
+              placeholder="Enter your name"
+              error={formErrors.name}
+            />
 
             {/* email address */}
-            <div>
-              <label htmlFor="lead-email" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                Email Address {!isView && <span className="text-rose-500">*</span>}
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <MailIcon className="w-4 h-4" />
-                </div>
-                <input
-                  id="lead-email"
-                  type="email"
-                  value={formData.email}
-                  disabled={isView}
-                  onChange={(e) => {
-                    setFormData({ ...formData, email: e.target.value });
-                    if (formErrors.email)
-                      setFormErrors({ ...formErrors, email: "" });
-                  }}
-                  placeholder="Enter your email"
-                  className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl transition-all ${isView
-                    ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
-                    : formErrors.email
-                      ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
-                      : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                    }`}
-                />
-              </div>
-              {formErrors.email && (
-                <p className="text-xs text-rose-500 mt-1 font-medium">
-                  {formErrors.email}
-                </p>
-              )}
-            </div>
+            <FormInput
+              id="lead-email"
+              label="Email Address"
+              type="email"
+              value={formData.email}
+              disabled={isView}
+              required
+              icon={<MailIcon className="w-4 h-4" />}
+              onChange={(e) => {
+                setFormData({ ...formData, email: e.target.value });
+                if (formErrors.email)
+                  setFormErrors({ ...formErrors, email: "" });
+              }}
+              placeholder="Enter your email"
+              error={formErrors.email}
+            />
 
             {/* phone number */}
-            <div>
-              <label htmlFor="lead-phone" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                Phone Number {!isView && <span className="text-rose-500">*</span>}
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <PhoneIcon className="w-4 h-4" />
-                </div>
-                <input
-                  id="lead-phone"
-                  type="tel"
-                  value={formData.phone}
-                  disabled={isView}
-                  onChange={(e) => {
-                    setFormData({ ...formData, phone: e.target.value });
-                    if (formErrors.phone)
-                      setFormErrors({ ...formErrors, phone: "" });
-                  }}
-                  placeholder="Enter your phone"
-                  className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl transition-all ${isView
-                    ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
-                    : formErrors.phone
-                      ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
-                      : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                    }`}
-                />
-              </div>
-              {formErrors.phone && (
-                <p className="text-xs text-rose-500 mt-1 font-medium">
-                  {formErrors.phone}
-                </p>
-              )}
-            </div>
+            <FormInput
+              id="lead-phone"
+              label="Phone Number"
+              type="tel"
+              value={formData.phone}
+              disabled={isView}
+              required
+              icon={<PhoneIcon className="w-4 h-4" />}
+              onChange={(e) => {
+                setFormData({ ...formData, phone: e.target.value });
+                if (formErrors.phone)
+                  setFormErrors({ ...formErrors, phone: "" });
+              }}
+              placeholder="Enter your phone"
+              error={formErrors.phone}
+            />
 
-            {/* status */}
-            <div className="sm:col-span-2">
-              <label htmlFor="lead-status" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                Status
-              </label>
-              <select
-                id="lead-status"
-                value={formData.status}
-                disabled={isView}
-                onChange={(e) =>
-                  setFormData({ ...formData, status: e.target.value })
-                }
-                className={`w-full px-4 py-2.5 text-sm rounded-xl transition-all ${isView
-                  ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
-                  : "bg-slate-50/70 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800"
-                  }`}
-              >
-                <option value={LEADS_STATUS_ENUM.NEW}>New</option>
-                <option value={LEADS_STATUS_ENUM.CONTACTED}>Contacted</option>
-                <option value={LEADS_STATUS_ENUM.QUALIFIED}>Qualified</option>
-                <option value={LEADS_STATUS_ENUM.LOST}>Lost</option>
-              </select>
-            </div>
+            {/* status dropdown */}
+            <StatusSelect
+              id="lead-status"
+              label="Status"
+              value={formData.status || LEADS_STATUS_ENUM.NEW}
+              disabled={submitting}
+              isView={isView}
+              onChange={(status) => {
+                setFormData((prev) => ({ ...prev, status }));
+              }}
+            />
 
             {/* notes section */}
-            <div className="sm:col-span-2 pt-1">
-              <div className="rounded-2xl border border-slate-200/90 bg-slate-50/50 p-4 ">
+            {(!isView || sortedExistingNotes.length > 0) && (
+              <div className="sm:col-span-2 pt-1">
+                <div className="rounded-2xl border border-slate-200/90 bg-slate-50/50 p-4 ">
                 {/* note textarea input */}
                 <div className="space-y-2">
-                  {!isView && <div className="relative">
-                    <textarea
-                      id="lead-notes"
-                      rows={3}
-                      value={currentNote}
-                      disabled={isView || submitting}
-                      onChange={(e) => setCurrentNote(e.target.value)}
-                      placeholder="Write note here..."
-                      className={`w-full px-3.5 py-2.5 text-sm rounded-xl transition-all bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-slate-400 text-slate-800 resize-y min-h-20 `}
-                    />
-                  </div>}
+                  {!isView && (
+                    <div className="relative">
+                      <textarea
+                        id="lead-notes"
+                        rows={3}
+                        value={currentNote}
+                        disabled={isView || submitting}
+                        onChange={(e) => {
+                          setCurrentNote(e.target.value);
+                          if (formErrors.note && isValidTextContent(e.target.value)) {
+                            setFormErrors((prev) => ({ ...prev, note: "" }));
+                          }
+                        }}
+                        placeholder="Write note here..."
+                        className={`w-full px-3.5 py-2.5 text-sm rounded-xl transition-all placeholder:text-slate-400 text-slate-800 resize-y min-h-20 ${
+                          formErrors.note
+                            ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20"
+                            : "bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        }`}
+                      />
+                      {formErrors.note && (
+                        <p className="text-xs text-rose-500 mt-1 font-medium">
+                          {formErrors.note}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {!isView && (
                     <div className="flex items-center justify-end pb-4">
                       <button
                         type="button"
                         onClick={handleAddNote}
-                        disabled={!currentNote.trim() || submitting}
+                        disabled={submitting}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-2xs"
                       >
                         <PlusIcon className="w-4 h-4" />
@@ -428,7 +440,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                           className="group flex items-start justify-between gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs text-xs text-slate-700 hover:border-slate-300 transition-all"
                         >
                           <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                            <span className="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-[10px] font-semibold">
+                            <span className="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-[10px] font-semibold">
                               {idx + 1}
                             </span>
                             <div className="flex-1 min-w-0">
@@ -461,7 +473,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                           className="group flex items-start justify-between gap-3 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs text-xs text-slate-700 hover:border-slate-300 transition-all"
                         >
                           <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                            <span className="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-[10px] font-semibold">
+                            <span className="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-[10px] font-semibold">
                               {sortedExistingNotes.length + idx + 1}
                             </span>
                             <p className="whitespace-pre-wrap wrap-break-words flex-1 text-slate-800 leading-relaxed">
@@ -484,9 +496,11 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                 )}
               </div>
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* action buttons */}
+        {/* action buttons */}
+        {(isEdit || isAdd) && (
           <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
             {isEdit && (
               <>
@@ -520,7 +534,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-700 active:bg-indigo-800 text-white font-medium text-sm rounded-xl shadow-sm shadow-indigo-600/30 transition-all hover:shadow-indigo-600/40 disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium text-sm rounded-xl shadow-sm shadow-blue-500/25 transition-all hover:shadow-blue-500/35 disabled:opacity-50 cursor-pointer"
                 >
                   {submitting && <SpinnerIcon className="w-4 h-4" />}
                   <span>{submitting ? "Saving..." : "Save"}</span>
@@ -528,8 +542,9 @@ export const LeadForm: React.FC<LeadFormProps> = ({
               </>
             )}
           </div>
-        </form>
-      </div>
-    </>
-  );
+        )}
+      </form>
+    </div>
+  </>
+);
 };

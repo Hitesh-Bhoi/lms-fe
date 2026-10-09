@@ -6,12 +6,14 @@ import {
   ChevronDownIcon,
   CloseIcon,
 } from "@/common/icon";
-// lead status options type
+
+// lead status dropdown option interface
 export interface StatusOption {
   label: string;
   value: string;
   dotColor: string;
 }
+
 // lead status dropdown options
 export const statusOptions: StatusOption[] = [
   {
@@ -99,9 +101,9 @@ export const StatusDropdownFilter: React.FC<StatusDropdownFilterProps> = ({
       <div
         className={`inline-flex items-center rounded-xl border text-sm font-medium transition-all shadow-xs ${
           isFiltered
-            ? "border-indigo-200 bg-indigo-50/50 text-indigo-950 hover:bg-indigo-50/80 hover:border-indigo-300 ring-2 ring-indigo-500/10"
+            ? "border-blue-200 bg-blue-50/50 text-blue-950 hover:bg-blue-50/80 hover:border-blue-300 ring-2 ring-blue-500/10"
             : "border-slate-200 bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 hover:border-slate-300"
-        } ${isOpen ? "ring-2 ring-indigo-500/20 border-indigo-500" : ""}`}
+        } ${isOpen ? "ring-2 ring-blue-500/20 border-blue-500" : ""}`}
       >
         <button
           type="button"
@@ -120,7 +122,7 @@ export const StatusDropdownFilter: React.FC<StatusDropdownFilterProps> = ({
                 className={`w-2 h-2 rounded-full ${currentOption.dotColor} ring-2 ring-offset-1 ring-slate-100`}
               />
             ) : (
-              <FilterIcon className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+              <FilterIcon className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
             )}
             <span
               className={`text-sm ${
@@ -135,7 +137,7 @@ export const StatusDropdownFilter: React.FC<StatusDropdownFilterProps> = ({
           <ChevronDownIcon
             className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
               isOpen
-                ? "rotate-180 text-indigo-600"
+                ? "rotate-180 text-blue-600"
                 : "group-hover:text-slate-600"
             }`}
           />
@@ -158,7 +160,7 @@ export const StatusDropdownFilter: React.FC<StatusDropdownFilterProps> = ({
         <div
           role="menu"
           aria-orientation="vertical"
-          className="absolute right-0 mt-2 w-45 rounded-2xl bg-white border border-slate-200/90 shadow-xl shadow-slate-900/10 p-2 z-30 animate-in fade-in zoom-in-95 duration-150 origin-top-right focus:outline-none"
+          className="absolute right-0 mt-2 w-48 rounded-2xl bg-white border border-slate-200/90 shadow-xl shadow-slate-900/10 p-2 z-30 animate-in fade-in zoom-in-95 duration-150 origin-top-right focus:outline-none"
         >
           {/* options list */}
           <div className="py-1 space-y-0.5">
@@ -172,14 +174,14 @@ export const StatusDropdownFilter: React.FC<StatusDropdownFilterProps> = ({
                   onClick={() => handleSelect(option.value)}
                   className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-left text-sm transition-colors cursor-pointer group ${
                     isSelected
-                      ? "bg-indigo-50/80 text-indigo-950 font-semibold"
+                      ? "bg-blue-50/80 text-blue-950 font-semibold"
                       : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <span
                       className={`w-2 h-2 rounded-full ${option.dotColor} ${
-                        isSelected ? "ring-2 ring-indigo-500/30" : ""
+                        isSelected ? "ring-2 ring-blue-500/30" : ""
                       }`}
                     />
                     <div className="flex flex-col">

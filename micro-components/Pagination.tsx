@@ -2,6 +2,7 @@
 import React from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/common/icon";
 
+// pagination component props interface
 export interface PaginationProps {
   page: number;
   totalPages: number;
@@ -12,6 +13,7 @@ export interface PaginationProps {
   onPageChange: (newPage: number) => void;
   disabled?: boolean;
 }
+
 // function to generate array of page numbers with trimmed ellipsis notation
 export const getPaginationPages = (
   currentPage: number,
@@ -61,17 +63,14 @@ export const Pagination: React.FC<PaginationProps> = ({
     return null;
   }
   const pages = getPaginationPages(page, totalPages);
-  const startItem = (page - 1) * limit + 1;
   const endItem = Math.min(page * limit, total);
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-slate-200/80 bg-white text-sm select-none">
       {/* information text */}
       <div className="text-xs sm:text-sm text-slate-500 font-medium">
-        Showing{" "}
-        <span className="font-semibold text-slate-800">{startItem}</span> to{" "}
         <span className="font-semibold text-slate-800">{endItem}</span> of{" "}
         <span className="font-semibold text-slate-800">{total}</span>{" "}
-        {total === 1 ? "lead" : "leads"}
+        {total === 1 ? "record" : "records"}
       </div>
       {/* controls */}
       <div className="flex items-center gap-1 sm:gap-1.5">
@@ -108,7 +107,7 @@ export const Pagination: React.FC<PaginationProps> = ({
                 aria-current={isCurrent ? "page" : undefined}
                 className={`min-w-8 h-8 px-2 inline-flex items-center justify-center text-xs sm:text-sm font-medium rounded-lg transition-all cursor-pointer ${
                   isCurrent
-                    ? "bg-indigo-600 text-white font-semibold shadow-xs"
+                    ? "bg-blue-600 text-white font-semibold shadow-xs shadow-blue-500/20"
                     : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                 } disabled:cursor-not-allowed`}
               >

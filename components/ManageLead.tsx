@@ -7,20 +7,29 @@ import { LeadRecordType } from "@/common/types";
 import { LeadForm } from "@/components/LeadForm";
 import { ArrowLeftIcon, UsersIcon, RefreshIcon } from "@/common/icon";
 import { LEAD_MODE_TYPE_ENUM } from "@/common/enums";
+import { getApiErrorMessage } from "@/common/helper";
 
+// manage lead wrapper props interface
 interface ManageLeadProps {
     mode: LEAD_MODE_TYPE_ENUM;
 }
 
+// manage lead page wrapper for add, edit, and view modes
 export const ManageLead = ({ mode }: ManageLeadProps) => {
+    // extract lead id from url route params
     const params = useParams();
     const leadId = (params?.id as string) || "";
+    // check if page is in add lead mode
     const isAdd = mode === LEAD_MODE_TYPE_ENUM.ADD;
 
+    // fetched lead record details
     const [lead, setLead] = useState<LeadRecordType | null>(null);
+    // loading state while fetching lead details
     const [loading, setLoading] = useState<boolean>(!isAdd);
+    // error message state if fetch fails
     const [error, setError] = useState<string | null>(null);
 
+    // manually re-fetch lead details from api
     const fetchLeadDetails = async () => {
         if (!leadId || isAdd) return;
         setLoading(true);
@@ -33,17 +42,19 @@ export const ManageLead = ({ mode }: ManageLeadProps) => {
             } else {
                 setError("Lead not found");
             }
-        } catch {
-            console.error("Failed to load lead");
-            setError("Failed to load lead details.");
+        } catch (err: unknown) {
+            console.error("Failed to load lead", err);
+            setError(getApiErrorMessage(err, "Failed to load lead details."));
         } finally {
             setLoading(false);
         }
     };
 
+    // automatically fetch lead data when viewing or editing an existing lead
     useEffect(() => {
         if (isAdd || !leadId) return;
 
+        // ignore flag to prevent stale state updates after unmount
         let ignore = false;
         const loadData = async () => {
             try {
@@ -53,8 +64,8 @@ export const ManageLead = ({ mode }: ManageLeadProps) => {
                     if (leadData) setLead(leadData);
                     else setError("Lead not found");
                 }
-            } catch {
-                if (!ignore) setError("Failed to load lead details.");
+            } catch (err: unknown) {
+                if (!ignore) setError(getApiErrorMessage(err, "Failed to load lead details."));
             } finally {
                 if (!ignore) setLoading(false);
             }
@@ -67,15 +78,15 @@ export const ManageLead = ({ mode }: ManageLeadProps) => {
     }, [leadId, isAdd]);
 
     return (
-        <div className="min-h-screen bg-slate-50/70 p-4 sm:p-6 lg:p-8">
-            <div className="max-w-3xl mx-auto space-y-6">
+        <div className="p-4 sm:p-6 lg:p-8">
+            <div className="max-w-4xl space-y-6">
                 {/* back to home */}
                 <div className="flex items-center gap-4">
                     <Link
                         href="/"
-                        className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors cursor-pointer group"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors cursor-pointer group"
                     >
-                        <span className="p-1.5 rounded-lg bg-white border border-slate-200 group-hover:border-indigo-200 group-hover:bg-indigo-50 transition-colors">
+                        <span className="p-1.5 rounded-lg bg-white border border-slate-200 group-hover:border-blue-200 group-hover:bg-blue-50 transition-colors">
                             <ArrowLeftIcon className="w-4 h-4" />
                         </span>
                         <span>Back to Home</span>
@@ -86,10 +97,11 @@ export const ManageLead = ({ mode }: ManageLeadProps) => {
                 {loading && (
                     <div className="bg-white rounded-2xl border border-slate-200/80 p-8 shadow-xs space-y-6 animate-pulse">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="sm:col-span-2 h-12 bg-slate-100 rounded-xl"></div>
                             <div className="h-12 bg-slate-100 rounded-xl"></div>
                             <div className="h-12 bg-slate-100 rounded-xl"></div>
-                            <div className="sm:col-span-2 h-12 bg-slate-100 rounded-xl"></div>
+                            <div className="h-12 bg-slate-100 rounded-xl"></div>
+                            <div className="h-12 bg-slate-100 rounded-xl"></div>
+                            <div className="sm:col-span-2 h-24 bg-slate-100 rounded-xl"></div>
                         </div>
                     </div>
                 )}
@@ -117,7 +129,7 @@ export const ManageLead = ({ mode }: ManageLeadProps) => {
                             </button>
                             <Link
                                 href="/"
-                                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors shadow-xs"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-xs shadow-blue-500/20"
                             >
                                 Return to Home
                             </Link>

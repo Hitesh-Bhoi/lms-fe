@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { SuccessIcon, ErrorIcon, CloseIcon } from "../icon";
 import { TOAST_TYPE_ENUM } from "../enums";
 
+// toast notification component props interface
 export interface ToastPropsType {
   message: string;
   type?: TOAST_TYPE_ENUM;

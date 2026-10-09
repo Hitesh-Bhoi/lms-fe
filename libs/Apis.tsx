@@ -4,6 +4,7 @@ import { LeadRecordType } from "@/common/types";
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 axios.defaults.withCredentials = true;
 
+// api query parameters for fetching leads
 export interface GetLeadsParams {
   search?: string;
   status?: string;
@@ -24,7 +25,7 @@ export const createLead = async (data: LeadRecordType) => {
 };
 
 export const updateLead = async (id: string, data: Partial<LeadRecordType>) => {
-  return axios.put(`${baseUrl}/leads/${id}`, data);
+  return axios.patch(`${baseUrl}/leads/${id}`, data);
 };
 
 export const deleteLead = async (id: string) => {

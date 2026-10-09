@@ -1,6 +1,11 @@
 "use client";
-import { formatDate } from "@/common/helper";
-import { LeadRecordType, PaginationType } from "@/common/types";
+import { formatDate, getApiErrorMessage } from "@/common/helper";
+import {
+  LeadRecordType,
+  PaginationType,
+  ToastInfoType,
+  ShowToastFunction,
+} from "@/common/types";
 import { getAllLeadsList } from "@/libs/Apis";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
@@ -21,6 +26,7 @@ import {
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
 import { StatusDropdownFilter } from "../micro-components/StatusDropdownFilter";
 import { Pagination } from "../micro-components/Pagination";
+import { SearchInput } from "../micro-components/SearchInput";
 
 // filter state interface
 export interface LeadsFilterState {
@@ -44,11 +50,17 @@ const defaultFilterState: LeadsFilterState = {
   status: "",
 };
 
+// leads status badge styling configuration
+interface StatusBadgeConfigType {
+  label: string;
+  bg: string;
+  text: string;
+  border: string;
+  dot: string;
+}
+
 // leads status badge styling by status
-const statusConfig: Record<
-  string,
-  { label: string; bg: string; text: string; border: string; dot: string }
-> = {
+const statusConfig: Record<string, StatusBadgeConfigType> = {
   [LEADS_STATUS_ENUM.NEW]: {
     label: "New",
     bg: "bg-sky-50",
@@ -104,6 +116,7 @@ const filterParams = (
   return queryParams;
 };
 
+// leads dashboard listing component with search, filtering, and pagination
 export const LeadsList = () => {
   // leads list records from API
   const [leadsList, setLeadsList] = useState<LeadRecordType[]>([]);
@@ -138,6 +151,7 @@ export const LeadsList = () => {
     };
   }, [debouncedSearch, filters.status, currentPage]);
 
+  // verify if incoming api response corresponds to the most recent query parameters
   const isCurrentRequest = (
     params: { search: string; status: string; page: number },
     requestId: number,
@@ -154,11 +168,8 @@ export const LeadsList = () => {
   const [deleteLeadTarget, setDeleteLeadTarget] =
     useState<LeadRecordType | null>(null);
   // toast notification state
-  const [toast, setToast] = useState<{
-    message: string;
-    type: TOAST_TYPE_ENUM;
-  } | null>(null);
-  const showToast = (
+  const [toast, setToast] = useState<ToastInfoType | null>(null);
+  const showToast: ShowToastFunction = (
     message: string,
     type: TOAST_TYPE_ENUM = TOAST_TYPE_ENUM.SUCCESS,
   ) => {
@@ -223,20 +234,13 @@ export const LeadsList = () => {
         if (axios.isCancel(err) || !isCurrentRequest(requestParams, requestId)) {
           return;
         }
-        
-        if (axios.isAxiosError(err) && err.response?.status === 401) {
-          setLeadsList([]);
-          setPaginationInfo(defaultPaginationInfo);
-          setError(err.response.data?.message || "401 Unauthenticated");
-          showToast(err.response.data?.message || "401 Unauthenticated", TOAST_TYPE_ENUM.ERROR);
-          return;
-        }
-        
+
+        const backendMsg = getApiErrorMessage(err, "Failed to fetch leads from backend server");
         console.error("Failed to fetch leads:", err);
         setLeadsList([]);
         setPaginationInfo(defaultPaginationInfo);
-        setError("Failed to fetch leads from backend server");
-        showToast("Failed to fetch leads", TOAST_TYPE_ENUM.ERROR);
+        setError(backendMsg);
+        showToast(backendMsg, TOAST_TYPE_ENUM.ERROR);
       } finally {
         if (isCurrentRequest(requestParams, requestId)) {
           setLoading(false);
@@ -248,6 +252,7 @@ export const LeadsList = () => {
 
   // refresh handler
   const handleRefresh = async () => {
+    if (isRefreshing || loading) return;
     const requestParams = {
       search: debouncedSearch,
       status: filters.status,
@@ -280,22 +285,12 @@ export const LeadsList = () => {
         return;
       }
 
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
-        setLeadsList([]);
-        setPaginationInfo(defaultPaginationInfo);
-        setError(err.response.data?.message || "401 Unauthenticated");
-        showToast(err.response.data?.message || "401 Unauthenticated", TOAST_TYPE_ENUM.ERROR);
-        return;
-      }
-
+      const backendMsg = getApiErrorMessage(err, "Failed to refresh leads from backend server");
       console.error("Failed to refresh leads:", err);
       setLeadsList([]);
       setPaginationInfo(defaultPaginationInfo);
-      setError("Failed to fetch leads from backend server");
-      showToast(
-        "Failed to fetch leads from backend server",
-        TOAST_TYPE_ENUM.ERROR,
-      );
+      setError(backendMsg);
+      showToast(backendMsg, TOAST_TYPE_ENUM.ERROR);
     } finally {
       if (isCurrentRequest(requestParams, requestId)) {
         setTimeout(() => {
@@ -306,7 +301,7 @@ export const LeadsList = () => {
     }
   };
   return (
-    <div className="min-h-screen bg-slate-50/70 p-4 sm:p-6 lg:p-4">
+    <div className="p-4 sm:p-6 lg:p-4">
       {/* toast notification */}
       {toast && (
         <Toast
@@ -321,28 +316,11 @@ export const LeadsList = () => {
         <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-sm">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3.5">
             {/* search input */}
-            <div className="relative flex-1 max-w-md">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <SearchIcon className="w-4 h-4" />
-              </div>
-              <input
-                type="text"
-                value={filters.search}
-                onChange={handleSearchChange}
-                placeholder="Search leads by name or email..."
-                className="w-full pl-10 pr-9 py-2.5 text-sm bg-slate-50/80 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400 text-slate-800"
-              />
-              {filters.search && (
-                <button
-                  type="button"
-                  onClick={handleClearSearch}
-                  title="Clear search query"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                >
-                  <CloseIcon className="w-4 h-4" />
-                </button>
-              )}
-            </div>
+            <SearchInput
+              value={filters.search}
+              onChange={handleSearchChange}
+              onClear={handleClearSearch}
+            />
             {/* right side: status filter, refresh, and add new lead button */}
             <div className="flex items-center gap-2.5 flex-wrap">
               {/* refresh btn */}
@@ -367,7 +345,7 @@ export const LeadsList = () => {
               {/* add new lead btn */}
               <Link
                 href="/leads/add"
-                className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium text-sm rounded-xl shadow-sm shadow-indigo-600/30 transition-all hover:shadow-indigo-600/40 active:scale-98"
+                className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium text-sm rounded-xl shadow-sm shadow-blue-500/25 transition-all hover:shadow-blue-500/35 active:scale-98"
               >
                 <PlusIcon className="w-4 h-4" />
                 <span>Add New Lead</span>
@@ -492,7 +470,7 @@ export const LeadsList = () => {
                             <Link
                               href={`/leads/${lead._id}`}
                               title="View Lead Details"
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors inline-flex items-center justify-center"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors inline-flex items-center justify-center"
                             >
                               <ViewIcon className="w-5 h-5" />
                             </Link>
@@ -556,7 +534,7 @@ export const LeadsList = () => {
                       <div className="max-w-md mx-auto">
                         <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mx-auto">
                           {hasActiveFilters ? (
-                            <FilterIcon className="w-6 h-6 text-indigo-500" />
+                            <FilterIcon className="w-6 h-6 text-blue-500" />
                           ) : (
                             <SearchIcon className="w-6 h-6" />
                           )}

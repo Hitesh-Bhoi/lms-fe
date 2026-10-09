@@ -3,20 +3,28 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UsersIcon } from "@/common/icon";
 import { loginAdmin } from "@/libs/Apis";
-import { emailRegx } from "@/common/helper";
+import { emailRegx, getApiErrorMessage } from "@/common/helper";
 
+// administrator login page component
 export const Login = () => {
+  // router instance for navigation
   const router = useRouter();
+  // administrator email address input
   const [email, setEmail] = useState<string>("");
+  // administrator password input
   const [password, setPassword] = useState<string>("");
+  // form error alert message
   const [error, setError] = useState<string>("");
+  // login submission loading state
   const [loading, setLoading] = useState<boolean>(false);
 
+  // handle login form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setError("");
 
-    // basic validation
+    // validate required credentials and email format
     if (!email || !password) {
       setError("Please enter both email and password.");
       return;
@@ -32,7 +40,7 @@ export const Login = () => {
       await loginAdmin({ email, password });
       router.push("/");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err?.message : "Invalid credentials";
+      const msg = getApiErrorMessage(err, "Invalid credentials");
       setError(msg);
     } finally {
       setLoading(false);
@@ -43,7 +51,7 @@ export const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200/80 p-8">
         <div className="text-center mb-8 flex flex-col items-center">
-          <div className="h-14 w-14 rounded-2xl bg-linear-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 shrink-0">
+          <div className="h-14 w-14 rounded-2xl bg-linear-to-tr from-blue-600 to-blue-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 shrink-0">
             <UsersIcon className="w-8 h-8" />
           </div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome to LMS</h1>
@@ -64,7 +72,7 @@ export const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@example.com"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all sm:text-sm text-slate-900"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all sm:text-sm text-slate-900"
             />
           </div>
 
@@ -75,14 +83,14 @@ export const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all sm:text-sm text-slate-900"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all sm:text-sm text-slate-900"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm shadow-blue-500/25"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>

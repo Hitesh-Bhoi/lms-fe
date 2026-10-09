@@ -6,11 +6,16 @@ import { MenuIcon, UserIcon, LogoutIcon } from "@/common/icon";
 import { logoutAdmin } from "@/libs/Apis";
 import { Toast } from "@/common/notification/Toast";
 import { TOAST_TYPE_ENUM } from "@/common/enums";
+import { ToastInfoType } from "@/common/types";
+import { getApiErrorMessage } from "@/common/helper";
 
+// topbar component props interface
 interface TopbarProps {
   isOpen: boolean;
   onToggle: () => void;
 }
+
+// determine header page title based on current pathname
 const getPageTitle = (pathname: string): string => {
   if (pathname === "/" || pathname === "/leads") return "Leads";
   if (pathname === "/leads/add") return "Add Lead";
@@ -22,16 +27,21 @@ const getPageTitle = (pathname: string): string => {
   return "Leads";
 };
 
+// main topbar navigation header component
 export const Topbar: React.FC<TopbarProps> = ({ isOpen, onToggle }) => {
+  // get current route pathname
   const pathname = usePathname();
+  // router instance for navigation
   const router = useRouter();
+  // header title resolved from pathname
   const pageTitle = getPageTitle(pathname);
+  // profile dropdown menu open state
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState<boolean>(false);
+  // logout request in-flight loading state
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: TOAST_TYPE_ENUM;
-  } | null>(null);
+  // toast notification state
+  const [toast, setToast] = useState<ToastInfoType | null>(null);
+  // ref to profile menu container for outside click detection
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   // close the profile menu on outside click
@@ -52,16 +62,22 @@ export const Topbar: React.FC<TopbarProps> = ({ isOpen, onToggle }) => {
 
   // admin logout
   const handleLogoutAdmin = async () => {
+    if (isLoggingOut) return;
     setIsLoggingOut(true);
     try {
       await logoutAdmin();
+      localStorage.removeItem("admin_token");
       setIsProfileMenuOpen(false);
       router.push("/login");
     } catch (error) {
       console.error("Logout error:", error);
       setIsProfileMenuOpen(true);
+      const msg = getApiErrorMessage(
+        error,
+        "Logout failed. Your session remains active, please try again."
+      );
       setToast({
-        message: "Logout failed. Your session remains active, please try again.",
+        message: msg,
         type: TOAST_TYPE_ENUM.ERROR,
       });
     } finally {
@@ -100,7 +116,7 @@ export const Topbar: React.FC<TopbarProps> = ({ isOpen, onToggle }) => {
         <button
           type="button"
           onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-          className="w-10 h-10 rounded-full bg-linear-to-tr from-indigo-600 to-blue-500 text-white flex items-center justify-center shadow-xs hover:ring-2 hover:ring-indigo-500/20 transition-all cursor-pointer"
+          className="w-10 h-10 rounded-full bg-linear-to-tr from-blue-600 to-blue-400 text-white flex items-center justify-center shadow-xs hover:ring-2 hover:ring-blue-500/20 transition-all cursor-pointer"
           title="Profile menu"
           aria-label="Profile menu"
         >
@@ -112,7 +128,7 @@ export const Topbar: React.FC<TopbarProps> = ({ isOpen, onToggle }) => {
             <Link
               href="/profile"
               onClick={() => setIsProfileMenuOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors"
+              className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
             >
               <UserIcon className="w-4 h-4 shrink-0 text-slate-400" />
               <span>Profile</span>
