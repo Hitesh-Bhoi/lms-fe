@@ -8,4 +8,8 @@ node_modules/
 
 # TypeScript / Build output
 dist/
-build/
+build
+*.tsbuildinfo
+
+# IDE settings
+.vscode/

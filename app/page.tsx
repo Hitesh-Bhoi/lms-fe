@@ -1,5 +1,5 @@
-export default function Home() {
-  return (
-    <>Home page</>
-  );
-}
+import { LeadsList } from "@/components/LeadsList";
+const page = () => {
+  return <LeadsList />;
+};
+export default page;
