@@ -292,11 +292,9 @@ export const LeadsList = () => {
       setError(backendMsg);
       showToast(backendMsg, TOAST_TYPE_ENUM.ERROR);
     } finally {
+      setIsRefreshing(false);
       if (isCurrentRequest(requestParams, requestId)) {
-        setTimeout(() => {
-          setIsRefreshing(false);
-          setLoading(false);
-        }, 1000);
+        setLoading(false);
       }
     }
   };
