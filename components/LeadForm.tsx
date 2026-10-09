@@ -355,8 +355,9 @@ export const LeadForm: React.FC<LeadFormProps> = ({
             />
 
             {/* notes section */}
-            <div className="sm:col-span-2 pt-1">
-              <div className="rounded-2xl border border-slate-200/90 bg-slate-50/50 p-4 ">
+            {(!isView || sortedExistingNotes.length > 0) && (
+              <div className="sm:col-span-2 pt-1">
+                <div className="rounded-2xl border border-slate-200/90 bg-slate-50/50 p-4 ">
                 {/* note textarea input */}
                 <div className="space-y-2">
                   {!isView && (
@@ -495,9 +496,11 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                 )}
               </div>
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* action buttons */}
+        {/* action buttons */}
+        {(isEdit || isAdd) && (
           <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
             {isEdit && (
               <>
@@ -539,8 +542,9 @@ export const LeadForm: React.FC<LeadFormProps> = ({
               </>
             )}
           </div>
-        </form>
-      </div>
-    </>
-  );
+        )}
+      </form>
+    </div>
+  </>
+);
 };

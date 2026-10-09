@@ -301,7 +301,7 @@ export const LeadsList = () => {
     }
   };
   return (
-    <div className="min-h-screen bg-slate-50/70 p-4 sm:p-6 lg:p-4">
+    <div className="p-4 sm:p-6 lg:p-4">
       {/* toast notification */}
       {toast && (
         <Toast

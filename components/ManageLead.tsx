@@ -78,7 +78,7 @@ export const ManageLead = ({ mode }: ManageLeadProps) => {
     }, [leadId, isAdd]);
 
     return (
-        <div className="min-h-screen bg-slate-50/70 p-4 sm:p-6 lg:p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
             <div className="max-w-4xl space-y-6">
                 {/* back to home */}
                 <div className="flex items-center gap-4">

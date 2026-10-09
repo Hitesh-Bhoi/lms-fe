@@ -63,17 +63,14 @@ export const Pagination: React.FC<PaginationProps> = ({
     return null;
   }
   const pages = getPaginationPages(page, totalPages);
-  const startItem = (page - 1) * limit + 1;
   const endItem = Math.min(page * limit, total);
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-slate-200/80 bg-white text-sm select-none">
       {/* information text */}
       <div className="text-xs sm:text-sm text-slate-500 font-medium">
-        Showing{" "}
-        <span className="font-semibold text-slate-800">{startItem}</span> to{" "}
         <span className="font-semibold text-slate-800">{endItem}</span> of{" "}
         <span className="font-semibold text-slate-800">{total}</span>{" "}
-        {total === 1 ? "lead" : "leads"}
+        {total === 1 ? "record" : "records"}
       </div>
       {/* controls */}
       <div className="flex items-center gap-1 sm:gap-1.5">
