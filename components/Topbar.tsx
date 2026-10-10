@@ -66,7 +66,6 @@ export const Topbar: React.FC<TopbarProps> = ({ isOpen, onToggle }) => {
     setIsLoggingOut(true);
     try {
       await logoutAdmin();
-      localStorage.removeItem("admin_token");
       setIsProfileMenuOpen(false);
       router.push("/login");
     } catch (error) {
