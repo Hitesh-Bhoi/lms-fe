@@ -15,6 +15,10 @@ COPY . .
 # environment variables must be present at build time for Next.js client-side variables
 ENV NEXT_TELEMETRY_DISABLED 1
 
+# --- FIX: Pass build argument to Next.js compilation ---
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 RUN npm run build
 
 #3 production image, copy all the files and run next
