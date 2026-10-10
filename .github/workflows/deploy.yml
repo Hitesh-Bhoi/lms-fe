@@ -44,7 +44,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
       # Backend APIs URL
           build-args: |
-            NEXT_PUBLIC_BASE_URL=http://localhost:5000/api
+            NEXT_PUBLIC_BASE_URL=https://lms-be-emi9.onrender.com/api
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
