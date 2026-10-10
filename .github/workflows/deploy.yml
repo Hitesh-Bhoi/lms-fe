@@ -42,9 +42,9 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-      # Backend APIs URL
+          # Backend APIs URL (Using GitHub Secrets)
           build-args: |
-            NEXT_PUBLIC_BASE_URL=https://lms-be-emi9.onrender.com/api
+            NEXT_PUBLIC_BASE_URL_PROD=${{ secrets.NEXT_PUBLIC_BASE_URL_PROD }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
