@@ -1,7 +1,10 @@
 import axios from "axios";
 import { LeadRecordType } from "@/common/types";
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+const baseUrl = process.env.NODE_ENV === "production" 
+  ? process.env.NEXT_PUBLIC_BASE_URL_PROD 
+  : process.env.NEXT_PUBLIC_BASE_URL_DEV;
+console.log(baseUrl);
 axios.defaults.withCredentials = true;
 
 // api query parameters for fetching leads
