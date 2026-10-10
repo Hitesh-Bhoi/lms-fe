@@ -34,7 +34,7 @@ A modern, responsive Lead Management System (LMS) web application built with **N
 Create a `.env` file in the root directory:
 
 ```env
-NEXT_PUBLIC_BASE_URL=http://localhost:5000/api
+NEXT_PUBLIC_BASE_URL=https://lms-be-emi9.onrender.com/api
 ```
 
 ---
@@ -49,7 +49,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [https://lms-fe-rpgd.onrender.com](https://lms-fe-rpgd.onrender.com) in your browser.
 
 ---
 
@@ -70,17 +70,18 @@ npm run lint
 
 ## APIs Used in Frontend (with cURL Examples)
 
-All requests interact with the backend API (`http://localhost:5000/api`).
+All requests interact with the backend API (`https://lms-be-emi9.onrender.com/api`).
 
 ---
 
 ### 1. Authentication APIs
 
 #### 1.1 Admin Login
+
 Authenticates administrator credentials and sets an HTTP-only authentication cookie (`token`).
 
 ```bash
-curl -X POST http://localhost:5000/api/auth/login \
+curl -X POST https://lms-be-emi9.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "admin@example.com",
@@ -89,6 +90,7 @@ curl -X POST http://localhost:5000/api/auth/login \
 ```
 
 **Response (`200 OK`):**
+
 ```json
 {
   "data": {
@@ -106,15 +108,17 @@ curl -X POST http://localhost:5000/api/auth/login \
 ---
 
 #### 1.2 Get Admin Profile
+
 Fetches the currently authenticated administrator's profile data.
 
 ```bash
-curl -X GET http://localhost:5000/api/auth/me \
+curl -X GET https://lms-be-emi9.onrender.com/api/auth/me \
   -H "Authorization: Bearer <YOUR_JWT_TOKEN>" \
   -H "Cookie: token=<YOUR_JWT_TOKEN>"
 ```
 
 **Response (`200 OK`):**
+
 ```json
 {
   "data": {
@@ -129,14 +133,16 @@ curl -X GET http://localhost:5000/api/auth/me \
 ---
 
 #### 1.3 Admin Logout
+
 Clears the session cookie on the client.
 
 ```bash
-curl -X POST http://localhost:5000/api/auth/logout \
+curl -X POST https://lms-be-emi9.onrender.com/api/auth/logout \
   -H "Cookie: token=<YOUR_JWT_TOKEN>"
 ```
 
 **Response (`200 OK`):**
+
 ```json
 {
   "message": "Logout successful"
@@ -148,13 +154,15 @@ curl -X POST http://localhost:5000/api/auth/logout \
 ### 2. Leads APIs
 
 #### 2.1 Get All Leads (with Search, Filter & Pagination)
+
 Retrieves a paginated list of leads with optional search query and status filter.
 
 ```bash
-curl -X GET "http://localhost:5000/api/leads?search=john&status=new&page=1&limit=10"
+curl -X GET "https://lms-be-emi9.onrender.com/api/leads?search=john&status=new&page=1&limit=10"
 ```
 
 **Response (`200 OK`):**
+
 ```json
 {
   "data": [
@@ -182,13 +190,15 @@ curl -X GET "http://localhost:5000/api/leads?search=john&status=new&page=1&limit
 ---
 
 #### 2.2 Get Lead by ID
+
 Fetches details of a single lead by ID.
 
 ```bash
-curl -X GET http://localhost:5000/api/leads/67055ec031a...
+curl -X GET https://lms-be-emi9.onrender.com/api/leads/67055ec031a...
 ```
 
 **Response (`200 OK`):**
+
 ```json
 {
   "data": {
@@ -206,10 +216,11 @@ curl -X GET http://localhost:5000/api/leads/67055ec031a...
 ---
 
 #### 2.3 Create Lead
+
 Creates a new lead entry.
 
 ```bash
-curl -X POST http://localhost:5000/api/leads \
+curl -X POST https://lms-be-emi9.onrender.com/api/leads \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Jane Smith",
@@ -220,6 +231,7 @@ curl -X POST http://localhost:5000/api/leads \
 ```
 
 **Response (`201 Created`):**
+
 ```json
 {
   "data": {
@@ -238,10 +250,11 @@ curl -X POST http://localhost:5000/api/leads \
 ---
 
 #### 2.4 Update Lead (Partial Update)
+
 Updates specific fields of an existing lead by ID.
 
 ```bash
-curl -X PATCH http://localhost:5000/api/leads/670560a129b... \
+curl -X PATCH https://lms-be-emi9.onrender.com/api/leads/670560a129b... \
   -H "Content-Type: application/json" \
   -d '{
     "status": "contacted"
@@ -249,6 +262,7 @@ curl -X PATCH http://localhost:5000/api/leads/670560a129b... \
 ```
 
 **Response (`200 OK`):**
+
 ```json
 {
   "data": {
@@ -267,13 +281,15 @@ curl -X PATCH http://localhost:5000/api/leads/670560a129b... \
 ---
 
 #### 2.5 Delete Lead
+
 Permanently deletes a lead and any associated notes.
 
 ```bash
-curl -X DELETE http://localhost:5000/api/leads/670560a129b...
+curl -X DELETE https://lms-be-emi9.onrender.com/api/leads/670560a129b...
 ```
 
 **Response (`200 OK`):**
+
 ```json
 {
   "message": "Lead record deleted successfully"
@@ -285,13 +301,15 @@ curl -X DELETE http://localhost:5000/api/leads/670560a129b...
 ### 3. Lead Notes APIs
 
 #### 3.1 Get Notes for a Lead
+
 Retrieves all notes recorded for a specific lead.
 
 ```bash
-curl -X GET http://localhost:5000/api/leads/67055ec031a.../notes
+curl -X GET https://lms-be-emi9.onrender.com/api/leads/67055ec031a.../notes
 ```
 
 **Response (`200 OK`):**
+
 ```json
 {
   "data": [
@@ -309,10 +327,11 @@ curl -X GET http://localhost:5000/api/leads/67055ec031a.../notes
 ---
 
 #### 3.2 Add Note to Lead
+
 Creates and attaches a new note to a specific lead.
 
 ```bash
-curl -X POST http://localhost:5000/api/leads/67055ec031a.../notes \
+curl -X POST https://lms-be-emi9.onrender.com/api/leads/67055ec031a.../notes \
   -H "Content-Type: application/json" \
   -d '{
     "content": "Followed up via email regarding pricing proposal."
@@ -320,6 +339,7 @@ curl -X POST http://localhost:5000/api/leads/67055ec031a.../notes \
 ```
 
 **Response (`201 Created`):**
+
 ```json
 {
   "data": {
