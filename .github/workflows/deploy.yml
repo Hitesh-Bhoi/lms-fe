@@ -26,7 +26,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Repository name ne lowercase ma convert karva mate metadata action update karo
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -35,16 +34,15 @@ jobs:
           tags: |
             type=raw,value=latest
 
-      # Lowercase tags no use karva mate tags parameter fix karo
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          # Backend APIs URL (Using GitHub Secrets)
+          # --- FIXED: Removed hyphens and used production URL ---
           build-args: |
-            NEXT_PUBLIC_BASE_URL_PROD=${{ secrets.NEXT_PUBLIC_BASE_URL_PROD }}
+            NEXT_PUBLIC_BASE_URL=https://lms-be-emi9.onrender.com/api
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
