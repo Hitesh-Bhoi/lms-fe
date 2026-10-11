@@ -1,9 +1,10 @@
 import axios from "axios";
 import { LeadRecordType } from "@/common/types";
 
-const baseUrl = process.env.NODE_ENV === "production" 
-  ? process.env.NEXT_PUBLIC_BASE_URL_PROD 
-  : process.env.NEXT_PUBLIC_BASE_URL_DEV;
+const baseUrl =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  "http://localhost:5000/api";
 console.log(baseUrl);
 axios.defaults.withCredentials = true;
 
