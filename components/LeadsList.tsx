@@ -22,9 +22,14 @@ import {
   EditIcon,
   TrashIcon,
   FilterIcon,
+  MailIcon,
+  HistoryIcon,
 } from "../common/icon";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
+import { SendMailModal } from "./SendMailModal";
+import { EmailHistoryModal } from "./EmailHistoryModal";
 import { StatusDropdownFilter } from "../micro-components/StatusDropdownFilter";
+import { DateFilter } from "../micro-components/DateFilter";
 import { Pagination } from "../micro-components/Pagination";
 import { SearchInput } from "../micro-components/SearchInput";
 
@@ -32,6 +37,8 @@ import { SearchInput } from "../micro-components/SearchInput";
 export interface LeadsFilterState {
   search: string;
   status: string;
+  startDate: string;
+  endDate: string;
 }
 
 // default pagination state
@@ -48,6 +55,8 @@ const defaultPaginationInfo: PaginationType = {
 const defaultFilterState: LeadsFilterState = {
   search: "",
   status: "",
+  startDate: "",
+  endDate: "",
 };
 
 // leads status badge styling configuration
@@ -91,16 +100,20 @@ const statusConfig: Record<string, StatusBadgeConfigType> = {
   },
 };
 
-// search and status filter with pagination support
+// search, status, and date filter with pagination support
 const filterParams = (
   search: string,
   status: string,
+  startDate: string = "",
+  endDate: string = "",
   page: number = 1,
   limit: number = 10,
 ) => {
   const queryParams: {
     search?: string;
     status?: string;
+    startDate?: string;
+    endDate?: string;
     page: number;
     limit: number;
   } = {
@@ -112,6 +125,12 @@ const filterParams = (
   }
   if (status.trim()) {
     queryParams.status = status.trim();
+  }
+  if (startDate.trim()) {
+    queryParams.startDate = startDate.trim();
+  }
+  if (endDate.trim()) {
+    queryParams.endDate = endDate.trim();
   }
   return queryParams;
 };
@@ -140,6 +159,8 @@ export const LeadsList = () => {
   const currentParamsRef = useRef({
     search: debouncedSearch,
     status: filters.status,
+    startDate: filters.startDate,
+    endDate: filters.endDate,
     page: currentPage,
   });
 
@@ -147,19 +168,29 @@ export const LeadsList = () => {
     currentParamsRef.current = {
       search: debouncedSearch,
       status: filters.status,
+      startDate: filters.startDate,
+      endDate: filters.endDate,
       page: currentPage,
     };
-  }, [debouncedSearch, filters.status, currentPage]);
+  }, [debouncedSearch, filters.status, filters.startDate, filters.endDate, currentPage]);
 
   // verify if incoming api response corresponds to the most recent query parameters
   const isCurrentRequest = (
-    params: { search: string; status: string; page: number },
+    params: {
+      search: string;
+      status: string;
+      startDate: string;
+      endDate: string;
+      page: number;
+    },
     requestId: number,
   ) => {
     return (
       requestId === latestRequestIdRef.current &&
       params.search === currentParamsRef.current.search &&
       params.status === currentParamsRef.current.status &&
+      params.startDate === currentParamsRef.current.startDate &&
+      params.endDate === currentParamsRef.current.endDate &&
       params.page === currentParamsRef.current.page
     );
   };
@@ -167,6 +198,10 @@ export const LeadsList = () => {
   // delete modal state
   const [deleteLeadTarget, setDeleteLeadTarget] =
     useState<LeadRecordType | null>(null);
+  // send mail modal state
+  const [sendMailLead, setSendMailLead] = useState<LeadRecordType | null>(null);
+  // email history modal state
+  const [historyLead, setHistoryLead] = useState<LeadRecordType | null>(null);
   // toast notification state
   const [toast, setToast] = useState<ToastInfoType | null>(null);
   const showToast: ShowToastFunction = (
@@ -176,7 +211,12 @@ export const LeadsList = () => {
     setToast({ message, type });
   };
   // check for applied filter
-  const hasActiveFilters = Boolean(filters.search.trim() || filters.status);
+  const hasActiveFilters = Boolean(
+    filters.search.trim() ||
+      filters.status ||
+      filters.startDate ||
+      filters.endDate,
+  );
   // handle search change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCurrentPage(1);
@@ -192,6 +232,11 @@ export const LeadsList = () => {
     setCurrentPage(1);
     setFilters((prev) => ({ ...prev, status }));
   };
+  // handle date change
+  const handleDateChange = (startDate: string, endDate: string) => {
+    setCurrentPage(1);
+    setFilters((prev) => ({ ...prev, startDate, endDate }));
+  };
   // handle page change
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= paginationInfo.totalPages && newPage !== currentPage) {
@@ -200,11 +245,13 @@ export const LeadsList = () => {
     }
   };
 
-  // API call to sync ui data on search, status filter, or page changes
+  // API call to sync ui data on search, status filter, date filter, or page changes
   useEffect(() => {
     const requestParams = {
       search: debouncedSearch,
       status: filters.status,
+      startDate: filters.startDate,
+      endDate: filters.endDate,
       page: currentPage,
     };
     const requestId = ++latestRequestIdRef.current;
@@ -216,6 +263,8 @@ export const LeadsList = () => {
         const queryParams = filterParams(
           requestParams.search,
           requestParams.status,
+          requestParams.startDate,
+          requestParams.endDate,
           requestParams.page,
           10,
         );
@@ -248,7 +297,7 @@ export const LeadsList = () => {
       }
     };
     fetchFilteredLeads();
-  }, [debouncedSearch, filters.status, currentPage]);
+  }, [debouncedSearch, filters.status, filters.startDate, filters.endDate, currentPage]);
 
   // refresh handler
   const handleRefresh = async () => {
@@ -256,6 +305,8 @@ export const LeadsList = () => {
     const requestParams = {
       search: debouncedSearch,
       status: filters.status,
+      startDate: filters.startDate,
+      endDate: filters.endDate,
       page: currentPage,
     };
     const requestId = ++latestRequestIdRef.current;
@@ -266,6 +317,8 @@ export const LeadsList = () => {
       const queryParams = filterParams(
         requestParams.search,
         requestParams.status,
+        requestParams.startDate,
+        requestParams.endDate,
         requestParams.page,
         10,
       );
@@ -340,6 +393,13 @@ export const LeadsList = () => {
                 onStatusChange={handleStatusChange}
                 disabled={loading}
               />
+              {/* date filter */}
+              <DateFilter
+                startDate={filters.startDate}
+                endDate={filters.endDate}
+                onDateChange={handleDateChange}
+                disabled={loading}
+              />
               {/* add new lead btn */}
               <Link
                 href="/leads/add"
@@ -409,7 +469,7 @@ export const LeadsList = () => {
                         <div className="w-28 h-4 bg-slate-200 rounded"></div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="w-16 h-8 bg-slate-200 rounded-lg ml-auto"></div>
+                        <div className="w-36 h-8 bg-slate-200 rounded-lg ml-auto"></div>
                       </td>
                     </tr>
                   ))
@@ -464,6 +524,24 @@ export const LeadsList = () => {
                         {/* actions buttons */}
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <div className="inline-flex items-center gap-1.5">
+                            {/* send email via gmail */}
+                            <button
+                              type="button"
+                              onClick={() => setSendMailLead(lead)}
+                              title="Send Email via Gmail"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors inline-flex items-center justify-center cursor-pointer"
+                            >
+                              <MailIcon className="w-5 h-5" />
+                            </button>
+                            {/* view gmail history */}
+                            <button
+                              type="button"
+                              onClick={() => setHistoryLead(lead)}
+                              title="View Gmail History"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors inline-flex items-center justify-center cursor-pointer"
+                            >
+                              <HistoryIcon className="w-5 h-5" />
+                            </button>
                             {/* view lead */}
                             <Link
                               href={`/leads/${lead._id}`}
@@ -568,6 +646,29 @@ export const LeadsList = () => {
         leadName={deleteLeadTarget?.name || ""}
         onSuccess={handleRefresh}
         showToast={showToast}
+      />
+      {/* send email via gmail modal */}
+      <SendMailModal
+        isOpen={!!sendMailLead}
+        onClose={() => setSendMailLead(null)}
+        leadId={sendMailLead?._id}
+        leadName={sendMailLead?.name || ""}
+        leadEmail={sendMailLead?.email || ""}
+        onSuccess={handleRefresh}
+        showToast={showToast}
+      />
+      {/* view gmail history modal */}
+      <EmailHistoryModal
+        isOpen={!!historyLead}
+        onClose={() => setHistoryLead(null)}
+        leadId={historyLead?._id || ""}
+        leadName={historyLead?.name || ""}
+        leadEmail={historyLead?.email || ""}
+        onOpenCompose={() => {
+          const target = historyLead;
+          setHistoryLead(null);
+          if (target) setSendMailLead(target);
+        }}
       />
     </div>
   );
