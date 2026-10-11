@@ -313,9 +313,11 @@ export const LeadForm: React.FC<LeadFormProps> = ({
               type="email"
               value={formData.email}
               disabled={isView}
+              readOnly={isEdit}
               required
               icon={<MailIcon className="w-4 h-4" />}
               onChange={(e) => {
+                if (isEdit) return;
                 setFormData({ ...formData, email: e.target.value });
                 if (formErrors.email)
                   setFormErrors({ ...formErrors, email: "" });
