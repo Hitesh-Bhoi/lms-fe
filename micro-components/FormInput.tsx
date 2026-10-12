@@ -10,6 +10,7 @@ interface FormInputProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
   disabled?: boolean;
+  readOnly?: boolean;
   required?: boolean;
   error?: string;
   icon?: React.ReactNode;
@@ -25,6 +26,7 @@ export const FormInput: React.FC<FormInputProps> = ({
   onChange,
   placeholder,
   disabled = false,
+  readOnly = false,
   required = false,
   error,
   icon,
@@ -36,7 +38,7 @@ export const FormInput: React.FC<FormInputProps> = ({
         htmlFor={id}
         className="block text-sm font-medium capitalize text-slate-700 mb-1.5"
       >
-        {label} {required && !disabled && <span className="text-rose-500">*</span>}
+        {label} {required && !disabled && !readOnly && <span className="text-rose-500">*</span>}
       </label>
       <div className="relative">
         {icon && (
@@ -49,12 +51,13 @@ export const FormInput: React.FC<FormInputProps> = ({
           type={type}
           value={value}
           disabled={disabled}
-          onChange={onChange}
+          readOnly={readOnly}
+          onChange={readOnly ? undefined : onChange}
           placeholder={placeholder}
           className={`w-full py-2.5 text-sm rounded-xl transition-all ${
             icon ? "pl-10 pr-4" : "px-4"
           } ${
-            disabled
+            disabled || readOnly
               ? "bg-slate-100/70 border border-slate-200 text-slate-800 cursor-not-allowed select-text"
               : error
                 ? "border border-rose-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20 text-slate-800"

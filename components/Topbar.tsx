@@ -67,7 +67,8 @@ export const Topbar: React.FC<TopbarProps> = ({ isOpen, onToggle }) => {
     try {
       await logoutAdmin();
       setIsProfileMenuOpen(false);
-      router.push("/login");
+      window.dispatchEvent(new Event("auth:logout"));
+      window.location.href = "/login";
     } catch (error) {
       console.error("Logout error:", error);
       setIsProfileMenuOpen(true);

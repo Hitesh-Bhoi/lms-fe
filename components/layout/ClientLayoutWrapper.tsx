@@ -20,6 +20,17 @@ export const AppLayoutWrapper: React.FC<AppLayoutWrapperProps> = ({
   // user authentication state (null: initial check pending, true: authenticated, false: unauthenticated)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
+  // listen for logout event to immediately mark user as unauthenticated
+  useEffect(() => {
+    const handleLogout = () => {
+      setIsAuthenticated(false);
+    };
+    window.addEventListener("auth:logout", handleLogout);
+    return () => {
+      window.removeEventListener("auth:logout", handleLogout);
+    };
+  }, []);
+
   // check user authentication
   useEffect(() => {
     const checkAuth = async () => {
@@ -38,7 +49,11 @@ export const AppLayoutWrapper: React.FC<AppLayoutWrapperProps> = ({
     };
 
     if (isAuthenticated === null) {
-      checkAuth();
+      if (pathname === "/login") {
+        setIsAuthenticated(false);
+      } else {
+        checkAuth();
+      }
     } else if (isAuthenticated && pathname === "/login") {
       checkAuth();
     } else if (!isAuthenticated && pathname !== "/login") {
