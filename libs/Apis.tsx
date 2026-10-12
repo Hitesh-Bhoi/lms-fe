@@ -53,5 +53,13 @@ export const logoutAdmin = async () => {
 };
 
 export const getAdminProfile = async () => {
-  return axios.get(`${baseUrl}/auth/me`);
+  return axios.get(`${baseUrl}/auth/me`, {
+    headers: {
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
+    },
+    params: {
+      _t: Date.now(),
+    },
+  });
 };
